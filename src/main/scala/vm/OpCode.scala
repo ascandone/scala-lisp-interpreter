@@ -1,6 +1,6 @@
 package vm
 
-import value.Value
+import value._
 
 sealed trait OpCode
 
@@ -16,9 +16,9 @@ case class Jump(target: Int) extends OpCode
 
 case class JumpIfNot(target: Int) extends OpCode
 
-case class SetGlobal(name: String) extends OpCode
+case class SetGlobal(name: java.lang.String) extends OpCode
 
-case class GetGlobal(name: String) extends OpCode
+case class GetGlobal(name: java.lang.String) extends OpCode
 
 case class SetLocal(ident: Int) extends OpCode
 
@@ -28,9 +28,6 @@ case class Call(passedArgs: Int) extends OpCode
 
 case object Return extends OpCode
 
+case class PushClosure(freeVariables: Int, fn: CompiledFunction[OpCode]) extends OpCode
 
-/*
-type 'v opcode =
-  | GetFree of int
-  | PushClosure of (int * 'v)
- */
+case class GetFree(ident: Int) extends OpCode

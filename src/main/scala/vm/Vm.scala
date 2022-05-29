@@ -118,6 +118,7 @@ private class Vm(private var instructions: Array[OpCode]) {
         stack.pop()
       }
       stack.push(retValue)
+      frames.pop()
 
     case GetLocal(ident) =>
       val index = frames.peek().basePointer + ident
@@ -125,8 +126,21 @@ private class Vm(private var instructions: Array[OpCode]) {
       stack.push(retValue)
 
     case SetLocal(ident) =>
+      // TODO test
       val value = stack.peek()
       val index = frames.peek().basePointer + ident
       stack.set(index, value)
+
+    case PushClosure(freeVariablesNum, fn) =>
+      val freeVariables = new Array[Value[OpCode]](freeVariablesNum)
+      for (i <- 0 until freeVariablesNum) {
+        val value = stack.pop()
+        freeVariables(i) = value
+      }
+      stack.push(Closure(freeVariables, fn))
+
+    case GetFree(ident) =>
+      val value = frames.peek().closure.freeVariables(ident)
+      stack.push(value)
   }
 }

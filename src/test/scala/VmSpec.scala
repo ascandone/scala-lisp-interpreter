@@ -108,11 +108,43 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Return,
     ))
 
-    val instructions: Array[OpCode] = Array(
+    val instructions = Array[OpCode](
       Push(Number(100)),
       Push(Number(200)),
       Push(fn),
       Call(2),
+    )
+
+    Vm.run(instructions) should be(Number(300))
+  }
+
+  it should "execute PushClosure" in {
+    // a => b => a + b
+    val inner = CompiledFunction[OpCode](
+      argsNumber = 1,
+      instructions = Array(
+        GetFree(0),
+        GetLocal(0),
+        Op2(Lib.add),
+        Return,
+      )
+    )
+
+    val outer = CompiledFunction[OpCode](
+      argsNumber = 1,
+      instructions = Array(
+        GetLocal(0),
+        PushClosure(1, inner),
+        Return
+      )
+    )
+
+    val instructions = Array[OpCode](
+      Push(Number(100)),
+      Push(Number(200)),
+      Push(outer),
+      Call(1),
+      Call(1),
     )
 
     Vm.run(instructions) should be(Number(300))
