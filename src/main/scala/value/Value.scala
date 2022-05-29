@@ -12,7 +12,7 @@ object Value {
   def nil[Op]: Value[Op] = List()
 }
 
-sealed trait Value[Op] {
+sealed trait Value[+Op] {
   def toBool: Boolean = this match {
     case Symbol("false") => false
     case List(scala.Nil) => false
@@ -20,13 +20,13 @@ sealed trait Value[Op] {
   }
 }
 
-case class Number[Op](value: Float) extends Value[Op]
+case class Number[+Op](value: Float) extends Value[Op]
 
-case class String[Op](value: java.lang.String) extends Value[Op]
+case class String[+Op](value: java.lang.String) extends Value[Op]
 
-case class Symbol[Op](value: java.lang.String) extends Value[Op]
+case class Symbol[+Op](value: java.lang.String) extends Value[Op]
 
-case class List[Op](value: scala.List[Value[Op]] = scala.List.empty) extends Value[Op]
+case class List[+Op](value: scala.List[Value[Op]] = scala.List.empty) extends Value[Op]
 
 object List {
   def of[Op](values: Value[Op]*): List[Op] = List(values.toList)
