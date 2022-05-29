@@ -14,13 +14,13 @@ case class Jump(target: Int) extends OpCode
 
 case class JumpIfNot(target: Int) extends OpCode
 
+case class SetGlobal(name: String) extends OpCode
+
+case class GetGlobal(name: String) extends OpCode
+
 /*
 type 'v opcode =
-  | Jump of int
-  | JumpIfNot of int
   | Op1 of ('v -> 'v)
-  | SetGlobal of string
-  | GetGlobal of string
   | SetLocal of int
   | GetLocal of int
   | GetFree of int

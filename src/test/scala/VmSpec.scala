@@ -69,4 +69,16 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
     Vm.run(instructions) should be(Number(1))
   }
 
+  it should "execute Op.GetGlobal/SetGlobal" in {
+
+    val instructions: Array[OpCode] = Array(
+      Push(Number(42)),
+      SetGlobal("x"),
+      Pop,
+      GetGlobal("x")
+    )
+
+    Vm.run(instructions) should be(Number(42))
+  }
+
 }

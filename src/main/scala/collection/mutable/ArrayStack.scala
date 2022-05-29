@@ -8,26 +8,26 @@ class ArrayStack[A: ClassTag](private var size: Int = 1024) {
 
   def push(value: A): Unit = {
     // TODO check stack overflow
-    this.pointer += 1
-    array(this.pointer) = value
+    pointer += 1
+    array(pointer) = value
   }
 
   def pop(): A = {
-    val value = this.peek()
-    array(this.pointer) = null.asInstanceOf[A]
-    this.pointer -= 1
+    val value = peek()
+    array(pointer) = null.asInstanceOf[A]
+    pointer -= 1
     value
   }
 
   def peek(): A =
-    if (this.pointer >= 0) {
-      array(this.pointer)
+    if (pointer >= 0) {
+      array(pointer)
     } else {
-      throw new Exception("Out of bounds")
+      throw new Exception(s"Out of bounds ($pointer)")
     }
 
   def length(): Int =
-    this.pointer + 1
+    pointer + 1
 
   def set() {
     ???

@@ -3,6 +3,8 @@ package vm
 import collection.mutable.ArrayStack
 import value.Value
 
+import scala.collection.mutable
+
 object Vm {
   def run(instructions: Array[OpCode]): Value = {
     val vm = new Vm(instructions)
@@ -15,6 +17,9 @@ private class Frame(val instructions: Array[OpCode]) {
 }
 
 private class Vm(private var instructions: Array[OpCode]) {
+  // TODO this should be outside
+  // TODO this should be an array
+  private val globals = mutable.HashMap[String, Value]()
   private val stack = new ArrayStack[Value]()
   private val frames = {
     val stack = new ArrayStack[Frame]()
@@ -63,6 +68,17 @@ private class Vm(private var instructions: Array[OpCode]) {
       if (!value.toBool) {
         frames.peek().ip = target
       }
+    }
+
+    case SetGlobal(name) => {
+      val value = stack.pop()
+      globals.put(name, value)
+      stack.push(Value.nil)
+    }
+
+    case GetGlobal(name) => {
+      val value = globals(name)
+      stack.push(value)
     }
   }
 }
