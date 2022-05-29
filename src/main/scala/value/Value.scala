@@ -18,6 +18,20 @@ sealed trait Value[+Op] {
     case List(scala.Nil) => false
     case _ => true
   }
+
+  override def toString: java.lang.String = this match {
+    case Symbol(name) => name
+    case String(str) => s"\"$str\""
+    case Number(n) =>
+      if (n.toInt == n) {
+        n.toInt.toString
+      } else {
+        n.toString
+      }
+    case List(scala.Nil) => "nil"
+    case List(values) => "(" + values.map(_.toString).mkString(" ") + ")"
+    case _ => "TODO"
+  }
 }
 
 case class Number[+Op](value: Float) extends Value[Op]
