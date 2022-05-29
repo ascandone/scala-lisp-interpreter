@@ -26,7 +26,24 @@ object Compiler {
   }
 }
 
-private class Compiler(val globals: mutable.HashMap[java.lang.String, Int] = new mutable.HashMap()) {
+class SymbolTable {
+  private val table: mutable.Map[java.lang.String, Int] = mutable.HashMap()
+
+  def define(name: java.lang.String): Int = {
+    val ident = table.size
+    table.put(name, ident)
+    ident
+  }
+
+  def lookup(name: java.lang.String): Option[Int] =
+    table.get(name)
+}
+
+
+private class Compiler(
+                        val globals: SymbolTable = new SymbolTable(),
+                        val locals: SymbolTable = new SymbolTable()
+                      ) {
   private val emitter = new Emitter()
 
   def collect(): Array[OpCode] = emitter.collect
@@ -34,9 +51,14 @@ private class Compiler(val globals: mutable.HashMap[java.lang.String, Int] = new
   def compile(value: Value[Nothing]): Unit = value match {
     case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) => emitter.emit(Push(value))
 
-    case Symbol(name) =>
-      val ident = globals(name)
-      emitter.emit(GetGlobal(ident))
+    case Symbol(name) => locals.lookup(name) match {
+      case Some(ident) => emitter.emit(GetLocal(ident))
+      case None => globals.lookup(name) match {
+        case Some(ident) => emitter.emit(GetGlobal(ident))
+        case None => throw new Error(s"Binding not found: $name")
+      }
+    }
+
 
     case List(forms) => forms match {
       case scala.Nil => emitter.emit(Push(value))
@@ -87,18 +109,25 @@ private class Compiler(val globals: mutable.HashMap[java.lang.String, Int] = new
   }
 
   private def compileLambda(params: scala.List[java.lang.String], body: Value[Nothing] = List.of()): Unit = {
-    val compiler = new Compiler(globals)
+    val innerLocals = new SymbolTable()
+    for (param <- params) {
+      innerLocals.define(param)
+    }
+
+    val compiler = new Compiler(globals, innerLocals)
     compiler.compile(body)
     compiler.emitter.emit(Return)
     val instructions = compiler.collect()
     emitter.emit(
-      Push(CompiledFunction(instructions))
+      Push(CompiledFunction(
+        instructions = instructions,
+        argsNumber = params.length,
+      ))
     )
   }
 
   private def compileDef(name: java.lang.String, value: Value[Nothing] = List.of()): Unit = {
-    val ident = this.globals.size
-    this.globals.put(name, ident)
+    val ident = globals.define(name)
     compile(value)
     emitter.emit(SetGlobal(ident))
   }
@@ -108,10 +137,10 @@ private class Compiler(val globals: mutable.HashMap[java.lang.String, Int] = new
     case value :: Nil => compile(value)
     case _ => for ((value, index) <- block.zipWithIndex) {
       if (index != 0) {
-        this.emitter.emit(Pop)
+        emitter.emit(Pop)
       }
 
-      this.compile(value)
+      compile(value)
     }
   }
 

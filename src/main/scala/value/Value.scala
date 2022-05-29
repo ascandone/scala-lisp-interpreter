@@ -30,7 +30,7 @@ sealed trait Value[+Op] {
       }
     case List(scala.Nil) => "nil"
     case List(values) => "(" + values.map(_.show).mkString(" ") + ")"
-    case CompiledFunction(_, _, _) => "#<Function>"
+    case CompiledFunction(_, _) => "#<Function>"
   }
 }
 
@@ -49,7 +49,6 @@ object List {
 case class CompiledFunction[Op](
                                  instructions: Array[Op],
                                  argsNumber: Int = 0,
-                                 localsNumber: Int = 0,
                                ) extends Value[Op]
 
 case class Closure[Op](

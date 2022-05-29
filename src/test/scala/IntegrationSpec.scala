@@ -104,6 +104,10 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("""((lambda () "ok"))""", """"ok"""")
   }
 
+  they should "work with two arguments" in {
+    expectVmToEvalAs("""((lambda (a b) (+ a b)) 100 200)""", "300")
+  }
+
   they should "resolve lambda saved in def" in {
     expectVmToEvalAs("""(def f (lambda () "ok")) (f)""", """"ok"""")
   }

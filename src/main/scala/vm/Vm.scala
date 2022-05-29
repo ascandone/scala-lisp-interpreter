@@ -90,7 +90,7 @@ private class Vm(private var instructions: Array[OpCode]) {
     case Call(passedArgs) =>
       val value = stack.pop()
       val closure: Closure[OpCode] = value match {
-        case fn@CompiledFunction(_, _, _) => Closure(
+        case fn@CompiledFunction(_, _) => Closure(
           freeVariables = Array(),
           fn = fn,
         )
@@ -101,7 +101,7 @@ private class Vm(private var instructions: Array[OpCode]) {
       }
 
       if (closure.fn.argsNumber != passedArgs) {
-        throw new Exception("Arity error")
+        throw new Exception(s"Arity error (expected ${closure.fn.argsNumber}, got $passedArgs)")
       }
 
       val newFrame = new Frame(
