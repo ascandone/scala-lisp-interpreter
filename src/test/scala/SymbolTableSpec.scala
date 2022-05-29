@@ -69,6 +69,30 @@ class SymbolTableSpec extends AnyFlatSpec with should.Matchers {
     expectResolveAs(secondLocal, ("f", 1, Local))
   }
 
+  it should "resolve free variables" in {
+    val global = new SymbolTable()
+
+    val firstLocal = global.nested
+    firstLocal.define("c")
+    firstLocal.define("d")
+
+    val secondLocal = firstLocal.nested
+
+    expectResolveAs(secondLocal, ("c", 0, Free))
+    expectResolveAs(secondLocal, ("d", 1, Free))
+  }
+
+  it should "resolve shadow free variables with locals" in {
+    val global = new SymbolTable()
+    val firstLocal = global.nested
+    firstLocal.define("a")
+
+    val secondLocal = firstLocal.nested
+    secondLocal.define("a")
+
+    expectResolveAs(secondLocal, ("a", 0, Local))
+  }
+
   def expectResolveAs(table: SymbolTable, data: (java.lang.String, Int, Scope)): Unit = {
     val (name, index, scope) = data
     table.resolve(name) should be(Some(SymbolTable.Symbol(

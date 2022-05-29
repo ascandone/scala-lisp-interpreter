@@ -99,12 +99,30 @@ class Compiler {
     compiler.compile(body)
     compiler.emitter.emit(Return)
     val instructions = compiler.collect()
-    emitter.emit(
-      Push(CompiledFunction(
-        instructions = instructions,
-        argsNumber = params.length,
-      ))
+
+    val fn = CompiledFunction(
+      instructions = instructions,
+      argsNumber = params.length,
     )
+
+    if (compiler.symbolTable.freeSymbols.isEmpty) {
+      emitter.emit(Push(fn))
+    } else {
+      for (free <- compiler.symbolTable.freeSymbols) {
+        val opCode = free.scope match {
+          case Global => GetGlobal(free.index)
+          case Local => GetLocal(free.index)
+          case Free => GetFree(free.index)
+        }
+        emitter.emit(opCode)
+      }
+      emitter.emit(
+        PushClosure(
+          freeVariables = compiler.symbolTable.freeSymbols.length,
+          fn = fn
+        )
+      )
+    }
   }
 
   private def compileDef(name: java.lang.String, value: Value[Nothing] = List.of()): Unit = {

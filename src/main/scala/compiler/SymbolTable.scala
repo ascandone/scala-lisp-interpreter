@@ -19,9 +19,9 @@ object SymbolTable {
 }
 
 class SymbolTable(val outer: Option[SymbolTable] = None) {
+  val freeSymbols = new mutable.ArrayBuffer[SymbolTable.Symbol]()
   private val store = new mutable.HashMap[java.lang.String, SymbolTable.Symbol]()
   private var numDefinitions = 0
-  // private val freeSymbols = new mutable.ArrayBuffer[SymbolTable.Symbol]()
 
   def define(name: java.lang.String): SymbolTable.Symbol = {
     // TODO use store.size instead of numDefinitions
@@ -41,9 +41,20 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
   }
 
   def resolve(name: java.lang.String): Option[SymbolTable.Symbol] = store.get(name).orElse {
-    outer.flatMap(_.resolve(name)).map(symbol => symbol.scope match {
-      case Global => symbol
-      case _ => ???
+    outer.flatMap(_.resolve(name)).map(resolvedSymbol => resolvedSymbol.scope match {
+      case Global => resolvedSymbol
+      case Local | Free => {
+        val index = freeSymbols.length
+        val symbol = SymbolTable.Symbol(
+          name = name,
+          scope = Free,
+          index = index
+        )
+
+        freeSymbols.addOne(resolvedSymbol)
+        store.put(name, resolvedSymbol)
+        symbol
+      }
     })
   }
 
