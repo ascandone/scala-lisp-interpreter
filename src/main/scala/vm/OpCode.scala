@@ -31,7 +31,6 @@ case object Return extends OpCode
 
 /*
 type 'v opcode =
-  | Op1 of ('v -> 'v)
   | GetFree of int
   | PushClosure of (int * 'v)
  */

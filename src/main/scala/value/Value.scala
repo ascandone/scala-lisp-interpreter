@@ -30,3 +30,8 @@ case class CompiledFunction[Op](
                                  argsNumber: Int = 0,
                                  localsNumber: Int = 0,
                                ) extends Value[Op]
+
+case class Closure[Op](
+                        freeVariables: Array[Value[Op]],
+                        fn: CompiledFunction[Op],
+                      ) extends Value[Op]

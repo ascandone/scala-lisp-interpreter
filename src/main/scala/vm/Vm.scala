@@ -12,7 +12,7 @@ object Vm {
   }
 }
 
-private class Frame(val instructions: Array[OpCode], val basePointer: Int) {
+private class Frame(val closure: Closure[OpCode], val basePointer: Int) {
   var ip = 0
 }
 
@@ -23,19 +23,26 @@ private class Vm(private var instructions: Array[OpCode]) {
   private val stack = new ArrayStack[Value[OpCode]]()
   private val frames = {
     val stack = new ArrayStack[Frame]()
-    stack.push(new Frame(instructions = instructions, basePointer = 0))
+    val initialFrame = new Frame(
+      closure = Closure(
+        freeVariables = Array(),
+        fn = CompiledFunction(instructions)
+      ),
+      basePointer = 0,
+    )
+    stack.push(initialFrame)
     stack
   }
 
   def run(): Value[OpCode] = {
     while ( {
       val currentFrame = frames.peek()
-      currentFrame.ip < currentFrame.instructions.length
+      currentFrame.ip < currentFrame.closure.fn.instructions.length
     }) {
 
       val opCode = {
         val currentFrame = frames.peek()
-        val opCode = frames.peek().instructions(currentFrame.ip)
+        val opCode = frames.peek().closure.fn.instructions(currentFrame.ip)
         currentFrame.ip += 1
         opCode
       }
@@ -82,17 +89,23 @@ private class Vm(private var instructions: Array[OpCode]) {
 
     case Call(passedArgs) =>
       val value = stack.pop()
-      val fn: CompiledFunction[OpCode] = value match {
-        case c@CompiledFunction(_, _, _) => c
+      val closure: Closure[OpCode] = value match {
+        case fn@CompiledFunction(_, _, _) => Closure(
+          freeVariables = Array(),
+          fn = fn,
+        )
+
+        case closure@Closure(_, _) => closure
+
         case _ => throw new Exception("Expected a function")
       }
 
-      if (fn.argsNumber != passedArgs) {
+      if (closure.fn.argsNumber != passedArgs) {
         throw new Exception("Arity error")
       }
 
       val newFrame = new Frame(
-        instructions = fn.instructions,
+        closure = closure,
         basePointer = stack.length() - passedArgs
       )
 
