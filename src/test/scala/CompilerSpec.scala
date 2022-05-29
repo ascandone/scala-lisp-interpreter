@@ -100,7 +100,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile not" in {
-    testCompileAs("(not true)",
+    testCompileAs("(! true)",
       Array(
         Push(Value.fromBool(true)),
         Op1(Not),
@@ -122,7 +122,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile a if expression of expressions" in {
-    testCompileAs("(if (> 100 200) (+ 10 20) (not ()))",
+    testCompileAs("(if (> 100 200) (+ 10 20) (! ()))",
       Array(
         /* 00 */ Push(Number(100)),
         /* 01 */ Push(Number(200)),

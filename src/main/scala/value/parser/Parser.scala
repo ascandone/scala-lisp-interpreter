@@ -10,7 +10,7 @@ object Parser extends RegexParsers {
   def program: Parser[scala.List[Value[Nothing]]] = rep(value)
 
   def symbol: Parser[Symbol[Nothing]] =
-    """[A-Za-z_+<>\-*/][a-zA-Z0-9]*""".r ^^ Symbol[Nothing]
+    """[A-Za-z_+<>\-*!/][a-zA-Z0-9]*""".r ^^ Symbol[Nothing]
 
   private def expr: Parser[List[Nothing]] = ("(" ~> rep(value) <~ ")") ^^ List[Nothing]
 
