@@ -18,6 +18,10 @@ case class SetGlobal(name: String) extends OpCode
 
 case class GetGlobal(name: String) extends OpCode
 
+case class SetLocal(ident: Int) extends OpCode
+
+case class GetLocal(ident: Int) extends OpCode
+
 case class Call(passedArgs: Int) extends OpCode
 
 case object Return extends OpCode

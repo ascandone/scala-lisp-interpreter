@@ -12,7 +12,7 @@ object Vm {
   }
 }
 
-private class Frame(val instructions: Array[OpCode]) {
+private class Frame(val instructions: Array[OpCode], val basePointer: Int) {
   var ip = 0
 }
 
@@ -23,7 +23,7 @@ private class Vm(private var instructions: Array[OpCode]) {
   private val stack = new ArrayStack[Value[OpCode]]()
   private val frames = {
     val stack = new ArrayStack[Frame]()
-    stack.push(new Frame(instructions))
+    stack.push(new Frame(instructions = instructions, basePointer = 0))
     stack
   }
 
@@ -51,36 +51,31 @@ private class Vm(private var instructions: Array[OpCode]) {
 
     case Pop => stack.pop()
 
-    case Op2(f) => {
+    case Op2(f) =>
       val right = stack.pop()
       val left = stack.pop()
       val result = f(left, right)
       stack.push(result)
-    }
 
-    case Jump(target) => {
+    case Jump(target) =>
       frames.peek().ip = target
-    }
 
-    case JumpIfNot(target) => {
+    case JumpIfNot(target) =>
       val value = stack.pop()
       if (!value.toBool) {
         frames.peek().ip = target
       }
-    }
 
-    case SetGlobal(name) => {
+    case SetGlobal(name) =>
       val value = stack.pop()
       globals.put(name, value)
       stack.push(Value.nil)
-    }
 
-    case GetGlobal(name) => {
+    case GetGlobal(name) =>
       val value = globals(name)
       stack.push(value)
-    }
 
-    case Call(passedArgs) => {
+    case Call(passedArgs) =>
       val value = stack.pop()
       val fn: CompiledFunction[OpCode] = value match {
         case c@CompiledFunction(_, _, _) => c
@@ -91,17 +86,29 @@ private class Vm(private var instructions: Array[OpCode]) {
         throw new Exception("Arity error")
       }
 
-      frames.push(new Frame(fn.instructions))
-    }
+      val newFrame = new Frame(
+        instructions = fn.instructions,
+        basePointer = stack.length() - passedArgs
+      )
 
-    case Return => {
+      frames.push(newFrame)
+
+    case Return =>
       val retValue = stack.pop()
-      // TODO locals := stack.length - currentFrame.basePointer
-      val numLocals = 0
-      for (_ <- 1 to numLocals) {
+      val numLocals = stack.length() - frames.peek().basePointer
+      for (_ <- 0 until numLocals) {
         stack.pop()
       }
       stack.push(retValue)
-    }
+
+    case GetLocal(ident) =>
+      val index = frames.peek().basePointer + ident
+      val retValue = stack.get(index)
+      stack.push(retValue)
+
+    case SetLocal(ident) =>
+      val value = stack.peek()
+      val index = frames.peek().basePointer + ident
+      stack.set(index, value)
   }
 }

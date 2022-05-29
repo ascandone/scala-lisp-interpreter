@@ -4,7 +4,7 @@ import org.scalatest.matchers._
 
 class ArrayStackSpec extends AnyFlatSpec with should.Matchers {
 
-  it should "parse symbols" in {
+  it should "execute push and pop" in {
     val stack = new ArrayStack[String]()
 
     stack.push("first")
@@ -16,6 +16,33 @@ class ArrayStackSpec extends AnyFlatSpec with should.Matchers {
     stack.push("third")
     stack.pop() should be("third")
     stack.pop() should be("first")
+  }
+
+  it should "execute get" in {
+    val stack = new ArrayStack[String]()
+
+    stack.push("first")
+    stack.push("second")
+    stack.push("third")
+
+    stack.get(0) should be("first")
+    stack.get(2) should be("third")
+
+  }
+
+  it should "execute set" in {
+    val stack = new ArrayStack[String]()
+
+    stack.push("first")
+    stack.push("second")
+    stack.push("third")
+
+
+    stack.set(0, "first-set")
+    stack.get(0) should be("first-set")
+
+    stack.set(2, "third-set")
+    stack.get(2) should be("third-set")
 
   }
 

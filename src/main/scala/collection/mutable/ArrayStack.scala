@@ -29,13 +29,9 @@ class ArrayStack[A: ClassTag](private var size: Int = 1024) {
   def length(): Int =
     pointer + 1
 
-  def set() {
-    ???
-  }
+  def set(index: Int, value: A): Unit =
+    array(index) = value
 
-  def get() {
-    ???
-  }
-
-
+  def get(index: Int): A =
+    array(index)
 }

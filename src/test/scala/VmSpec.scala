@@ -98,4 +98,24 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
     Vm.run(instructions) should be(Number(142))
   }
 
+  it should "execute Op.Call with two args" in {
+
+    val fn = CompiledFunction[OpCode](argsNumber = 2, instructions = Array(
+      Push(Value.nil),
+      GetLocal(0),
+      GetLocal(1),
+      Op2(Lib.add),
+      Return,
+    ))
+
+    val instructions: Array[OpCode] = Array(
+      Push(Number(100)),
+      Push(Number(200)),
+      Push(fn),
+      Call(2),
+    )
+
+    Vm.run(instructions) should be(Number(300))
+  }
+
 }
