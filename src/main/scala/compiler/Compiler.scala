@@ -126,7 +126,7 @@ class Compiler {
   }
 
   private def compileDef(name: java.lang.String, value: Value[Nothing] = List.of()): Unit = {
-    val symbol = symbolTable.define(name)
+    val symbol = symbolTable.define(name, forceGlobal = true)
     compile(value)
     emitter.emit(SetGlobal(symbol.index))
   }

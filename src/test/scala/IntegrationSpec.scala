@@ -42,6 +42,19 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     // TODO lambda
   }
 
+  they should "resolve shadow each other" in {
+    expectVmToEvalAs(
+      """
+        (def x 0)
+
+        (def f (lambda () x))
+
+        (def x 1)
+
+        (f)
+        """, "0")
+  }
+
   behavior of "if expression"
   it should "return the first argument when truthy" in {
     expectVmToEvalAs("(if true (+ 1 2) ())", "3")
@@ -110,6 +123,42 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
   they should "resolve lambda saved in def" in {
     expectVmToEvalAs("""(def f (lambda () "ok")) (f)""", """"ok"""")
+  }
+
+  they should "resolve local arguments" in {
+    expectVmToEvalAs(
+      """
+        (def f
+          (lambda () (do
+            (def glob 42)
+            glob)))
+
+        (f)
+
+        """, "42")
+  }
+
+  they should "resolve be able to define global values" in {
+    expectVmToEvalAs(
+      """
+        (def f
+          (lambda (x)
+            (def glob x)))
+
+        (f 42)
+        glob
+        """, "42")
+  }
+
+  they should "resolve be able to define global values, initialized with nil, before their call" in {
+    expectVmToEvalAs(
+      """
+        (def f
+          (lambda (x)
+            (def glob x)))
+
+        glob
+        """, "()")
   }
 
   they should "handle nested frames" in {
@@ -193,6 +242,21 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
       ((f 10) 100)
       """, "110")
+  }
+
+  they should "work with global and local def" in {
+    expectVmToEvalAs(
+      """
+        (def glob 20)
+
+        (def f
+          (lambda (a) (do
+            (def l 42)
+            (lambda (b)
+              (+ glob (+ l (+ a b)))))))
+
+        ((f 10) 100)
+      """, (10 + 42 + 100 + 20).toString)
   }
 
 

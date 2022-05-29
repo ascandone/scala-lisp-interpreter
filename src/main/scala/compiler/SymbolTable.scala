@@ -23,21 +23,28 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
   private val store = new mutable.HashMap[java.lang.String, SymbolTable.Symbol]()
   private var numDefinitions = 0
 
-  def define(name: java.lang.String): SymbolTable.Symbol = {
-    // TODO use store.size instead of numDefinitions
-    val symbol = SymbolTable.Symbol(
-      name = name,
-      index = numDefinitions,
-      scope = outer match {
-        case Some(_) => Local
-        case None => Global
+  def define(name: java.lang.String, forceGlobal: Boolean = false): SymbolTable.Symbol = {
+    if (forceGlobal) {
+      outer match {
+        case None => define(name, forceGlobal = false)
+        case Some(outerTable) => outerTable.define(name, forceGlobal = true)
       }
-    )
+    } else {
+      // TODO use store.size instead of numDefinitions
+      val symbol = SymbolTable.Symbol(
+        name = name,
+        index = numDefinitions,
+        scope = outer match {
+          case Some(_) => Local
+          case None => Global
+        }
+      )
 
-    numDefinitions += 1
+      numDefinitions += 1
 
-    store(name) = symbol
-    symbol
+      store(name) = symbol
+      symbol
+    }
   }
 
   def resolve(name: java.lang.String): Option[SymbolTable.Symbol] = store.get(name).orElse {

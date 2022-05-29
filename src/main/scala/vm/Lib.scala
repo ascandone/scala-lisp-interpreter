@@ -5,7 +5,7 @@ import value._
 object Add extends Op2Impl {
   override def apply(x: Value[OpCode], y: Value[OpCode]): Value[OpCode] = (x, y) match {
     case (Number(na), Number(nb)) => Number(na + nb)
-    case _ => throw new Exception("Add error")
+    case _ => throw new Exception(s"Add error (expected numbers, got ${x.show} and ${y.show}")
   }
 }
 

@@ -78,14 +78,17 @@ private class Vm(private var instructions: Array[OpCode]) {
         frames.peek().ip = target
       }
 
-    case SetGlobal(name) =>
+    case SetGlobal(ident) =>
       val value = stack.pop()
-      globals.put(name, value)
+      globals.put(ident, value)
       stack.push(Value.nil)
 
-    case GetGlobal(name) =>
-      val value = globals(name)
-      stack.push(value)
+    case GetGlobal(ident) => globals.get(ident) match {
+      // Receiving `None` means that (def) was called inside a lambda not yet called
+      case None => stack.push(List.of())
+      case Some(value) => stack.push(value)
+    }
+
 
     case Call(passedArgs) =>
       val value = stack.pop()
