@@ -51,6 +51,11 @@ private class Vm(private var instructions: Array[OpCode]) {
 
     case Pop => stack.pop()
 
+    case Op1(f) =>
+      val value = stack.pop()
+      val result = f(value)
+      stack.push(result)
+
     case Op2(f) =>
       val right = stack.pop()
       val left = stack.pop()
