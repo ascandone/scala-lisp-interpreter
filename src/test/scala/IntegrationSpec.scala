@@ -112,6 +112,77 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("""(def f (lambda () "ok")) (f)""", """"ok"""")
   }
 
+  they should "handle nested frames" in {
+    expectVmToEvalAs(
+      """
+        (def one (lambda () 100))
+        (def two (lambda () (one)))
+        (def three (lambda () (two)))
+        (three)
+        """, "100")
+  }
+
+  they should "be able to read global env" in {
+    expectVmToEvalAs(
+      """
+      (def x 42)
+      (def f (lambda () x))
+      (f)
+        """, "42")
+  }
+
+  they should "handle inner if expressions" in {
+    expectVmToEvalAs(
+      """
+        (def bool->string
+          (lambda (b)
+            (do
+              0 1 2
+              (if b "true" "false"))))
+
+       (bool->string true)
+        """, "\"true\"")
+  }
+
+  they should "handle if expressions inside arguments list" in {
+    expectVmToEvalAs(
+      """
+      (def id (lambda (ignored x) x))
+      (id "ignore me" (if true "a" "b"))
+      """, "\"a\"")
+  }
+
+  they should "handle functions passed as argument" in {
+    expectVmToEvalAs(
+      """
+      (def caller (lambda (f) (f 10)))
+      (caller (lambda (n) (+ n 1)))
+      """, "11")
+  }
+
+  they should "respect the arguments order" in {
+    expectVmToEvalAs("((lambda (x y) x) 0 1)", "0")
+    expectVmToEvalAs("((lambda (x y) y) 0 1)", "1")
+  }
+
+  they should "shadow parameter arguments" in {
+    expectVmToEvalAs("((lambda (x x) x) 0 1)", "1")
+  }
+
+  they should "work with recursive bindings" in {
+    val LIM = 4
+
+    expectVmToEvalAs(
+      s"""
+      (def f (lambda (n)
+        (if (> n $LIM)
+          n
+          (f (+ 1 n)))))
+
+      (f 0)
+      """, (LIM + 1).toString)
+  }
+
 
   def expectVmToEvalAs(str: java.lang.String, expected: java.lang.String): Unit = {
     val parsed = Parser.run(str).get
