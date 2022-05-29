@@ -8,7 +8,7 @@ object Value {
   } else {
     Symbol("false")
   }
-  
+
   def nil[Op]: Value[Op] = List()
 }
 
@@ -27,6 +27,10 @@ case class String[Op](value: java.lang.String) extends Value[Op]
 case class Symbol[Op](value: java.lang.String) extends Value[Op]
 
 case class List[Op](value: scala.List[Value[Op]] = scala.List.empty) extends Value[Op]
+
+object List {
+  def of[Op](values: Value[Op]*): List[Op] = List(values.toList)
+}
 
 case class CompiledFunction[Op](
                                  instructions: Array[Op],
