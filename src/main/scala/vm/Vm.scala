@@ -1,7 +1,7 @@
 package vm
 
 import collection.mutable.ArrayStack
-import value.Value
+import value._
 
 import scala.collection.mutable
 
@@ -19,7 +19,7 @@ private class Frame(val instructions: Array[OpCode]) {
 private class Vm(private var instructions: Array[OpCode]) {
   // TODO this should be outside
   // TODO this should be an array
-  private val globals = mutable.HashMap[String, Value[OpCode]]()
+  private val globals = mutable.HashMap[java.lang.String, Value[OpCode]]()
   private val stack = new ArrayStack[Value[OpCode]]()
   private val frames = {
     val stack = new ArrayStack[Frame]()
@@ -78,6 +78,30 @@ private class Vm(private var instructions: Array[OpCode]) {
     case GetGlobal(name) => {
       val value = globals(name)
       stack.push(value)
+    }
+
+    case Call(passedArgs) => {
+      val value = stack.pop()
+      val fn: CompiledFunction[OpCode] = value match {
+        case c@CompiledFunction(_, _, _) => c
+        case _ => throw new Exception("Expected a function")
+      }
+
+      if (fn.argsNumber != passedArgs) {
+        throw new Exception("Arity error")
+      }
+
+      frames.push(new Frame(fn.instructions))
+    }
+
+    case Return => {
+      val retValue = stack.pop()
+      // TODO locals := stack.length - currentFrame.basePointer
+      val numLocals = 0
+      for (_ <- 1 to numLocals) {
+        stack.pop()
+      }
+      stack.push(retValue)
     }
   }
 }

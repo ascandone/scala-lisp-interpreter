@@ -83,7 +83,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "execute Op.Call with no args" in {
 
-    val fn = Function[OpCode](instructions = Array(
+    val fn = CompiledFunction[OpCode](instructions = Array(
       Push(Number(100)),
       Push(Number(42)),
       Op2(Lib.add),
@@ -95,7 +95,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(0),
     )
 
-    Vm.run(instructions) should be(Number(42))
+    Vm.run(instructions) should be(Number(142))
   }
 
 }

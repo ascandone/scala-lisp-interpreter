@@ -25,8 +25,8 @@ case class Symbol[Op](value: java.lang.String) extends Value[Op]
 
 case class List[Op](value: scala.List[Value[Op]] = scala.List.empty) extends Value[Op]
 
-case class Function[Op](
-                         instructions: Array[Op],
-                         argsNumber: Int = 0,
-                         localsNumber: Int = 0,
-                       ) extends Value[Op]
+case class CompiledFunction[Op](
+                                 instructions: Array[Op],
+                                 argsNumber: Int = 0,
+                                 localsNumber: Int = 0,
+                               ) extends Value[Op]
