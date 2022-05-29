@@ -10,6 +10,7 @@ object Compiler {
   val IF = "if"
   val DEF = "def"
   val LAMBDA = "lambda"
+  val QUOTE = "quote"
 
   def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
     val block = List[Nothing](
@@ -78,6 +79,11 @@ class Compiler {
           body,
         )
         case _ => throw new Exception("Invalid `lambda` arguments")
+      }
+
+      case Symbol(Compiler.QUOTE) :: args => args match {
+        case value :: Nil => emitter.emit(Push(value))
+        case _ => throw new Exception("Invalid `quote` arguments")
       }
 
       case f :: args =>

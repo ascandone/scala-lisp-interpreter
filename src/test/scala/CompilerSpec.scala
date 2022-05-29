@@ -155,6 +155,33 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     ))
   }
 
+  behavior of "quote special form"
+  it should "be a noop with literals" in {
+    testCompileAs("(quote 42)", Array(
+      Push(Number(42)),
+    ))
+
+    testCompileAs("(quote \"hello\")", Array(
+      Push(String("hello")),
+    ))
+
+    testCompileAs("(quote ())", Array(
+      Push(List()),
+    ))
+  }
+
+  it should "prevent symbols from evaluating" in {
+    testCompileAs("(quote a)", Array(
+      Push(Symbol("a")),
+    ))
+  }
+
+  it should "prevent lists from evaluating" in {
+    testCompileAs("(quote (a b))", Array(
+      Push(List.of(Symbol("a"), Symbol("b"))),
+    ))
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)
