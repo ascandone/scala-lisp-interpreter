@@ -166,7 +166,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       argsNumber = 1,
       instructions = Array(
         /* 00 */ GetLocal(0),
-        /* 01 */ Push(Number(LIM)),
+        /* 01 */ Push(Number(LIM.toFloat)),
         /* 02 */ Op2(GreaterThan),
         /* 03 */ JumpIfNot(6),
         /* 04 */ GetLocal(0),
@@ -189,7 +189,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(1),
     )
 
-    Vm.run(instructions) should be(Number(LIM + 1))
+    Vm.run(instructions) should be(Number((LIM + 1).toFloat))
   }
 
 
