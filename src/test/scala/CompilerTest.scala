@@ -139,6 +139,22 @@ class CompilerTest extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  it should "compile def expressions" in {
+    testCompileAs("(def x 10) (def y 20) (+ x y)", Array(
+      Push(Number(10)),
+      SetGlobal(0),
+      Pop,
+
+      Push(Number(20)),
+      SetGlobal(1),
+      Pop,
+
+      GetGlobal(0),
+      GetGlobal(1),
+      Op2(Add),
+    ))
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)
