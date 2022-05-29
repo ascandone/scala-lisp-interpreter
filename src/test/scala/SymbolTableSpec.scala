@@ -35,7 +35,7 @@ class SymbolTableSpec extends AnyFlatSpec with should.Matchers {
     global.define("a")
     global.define("b")
 
-    val local = new SymbolTable(Some(global))
+    val local = global.nested
     local.define("c")
     local.define("d")
 
@@ -50,11 +50,11 @@ class SymbolTableSpec extends AnyFlatSpec with should.Matchers {
     global.define("a")
     global.define("b")
 
-    val firstLocal = new SymbolTable(Some(global))
+    val firstLocal = global.nested
     firstLocal.define("c")
     firstLocal.define("d")
 
-    val secondLocal = new SymbolTable(Some(firstLocal))
+    val secondLocal = firstLocal.nested
     secondLocal.define("e")
     secondLocal.define("f")
 

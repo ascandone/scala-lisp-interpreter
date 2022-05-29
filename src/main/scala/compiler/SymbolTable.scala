@@ -24,6 +24,7 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
   // private val freeSymbols = new mutable.ArrayBuffer[SymbolTable.Symbol]()
 
   def define(name: java.lang.String): SymbolTable.Symbol = {
+    // TODO use store.size instead of numDefinitions
     val symbol = SymbolTable.Symbol(
       name = name,
       index = numDefinitions,
@@ -45,4 +46,6 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
       case _ => ???
     })
   }
+
+  def nested = new SymbolTable(Some(this))
 }

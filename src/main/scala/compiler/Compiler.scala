@@ -3,8 +3,6 @@ package compiler
 import value._
 import vm._
 
-import scala.collection.mutable
-
 object Compiler {
   val DO = "do"
   val TRUE = "true"
@@ -26,39 +24,24 @@ object Compiler {
   }
 }
 
-class SymbolTable {
-  private val table: mutable.Map[java.lang.String, Int] = mutable.HashMap()
-
-  def define(name: java.lang.String): Int = {
-    val ident = table.size
-    table.put(name, ident)
-    ident
-  }
-
-  def lookup(name: java.lang.String): Option[Int] =
-    table.get(name)
-}
-
-
-private class Compiler(
-                        val globals: SymbolTable = new SymbolTable(),
-                        val locals: SymbolTable = new SymbolTable()
-                      ) {
+class Compiler {
   private val emitter = new Emitter()
+  private var symbolTable = new SymbolTable()
 
   def collect(): Array[OpCode] = emitter.collect
 
   def compile(value: Value[Nothing]): Unit = value match {
-    case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) => emitter.emit(Push(value))
+    case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | CompiledFunction(_, _) | Closure(_, _) =>
+      emitter.emit(Push(value))
 
-    case Symbol(name) => locals.lookup(name) match {
-      case Some(ident) => emitter.emit(GetLocal(ident))
-      case None => globals.lookup(name) match {
-        case Some(ident) => emitter.emit(GetGlobal(ident))
-        case None => throw new Error(s"Binding not found: $name")
+    case Symbol(name) => symbolTable.resolve(name) match {
+      case None => throw new Error(s"Binding not found: $name")
+      case Some(sym) => sym.scope match {
+        case Global => emitter.emit(GetGlobal(sym.index))
+        case Local => emitter.emit(GetLocal(sym.index))
+        case Free => emitter.emit(GetFree(sym.index))
       }
     }
-
 
     case List(forms) => forms match {
       case scala.Nil => emitter.emit(Push(value))
@@ -103,18 +86,16 @@ private class Compiler(
         }
         compile(f)
         emitter.emit(Call(args.length))
-
-
     }
   }
 
   private def compileLambda(params: scala.List[java.lang.String], body: Value[Nothing] = List.of()): Unit = {
-    val innerLocals = new SymbolTable()
+    val compiler = new Compiler()
+    compiler.symbolTable = this.symbolTable.nested
     for (param <- params) {
-      innerLocals.define(param)
+      compiler.symbolTable.define(param)
     }
 
-    val compiler = new Compiler(globals, innerLocals)
     compiler.compile(body)
     compiler.emitter.emit(Return)
     val instructions = compiler.collect()
@@ -127,9 +108,9 @@ private class Compiler(
   }
 
   private def compileDef(name: java.lang.String, value: Value[Nothing] = List.of()): Unit = {
-    val ident = globals.define(name)
+    val symbol = symbolTable.define(name)
     compile(value)
-    emitter.emit(SetGlobal(ident))
+    emitter.emit(SetGlobal(symbol.index))
   }
 
   private def compileBlock(block: scala.List[Value[Nothing]]): Unit = block match {
