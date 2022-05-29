@@ -41,9 +41,19 @@ private class Compiler {
 
       case (Symbol("+") :: args) => compileOp2(Add, args)
       case (Symbol(">") :: args) => compileOp2(GreaterThan, args)
+      case (Symbol("not") :: args) => compileOp1(Not, args)
 
       case _ => ???
     }
+  }
+
+  private def compileOp1(op: Op1Impl, args: scala.List[Value[Nothing]]): Unit = args match {
+    case scala.List(x) => emitter.emit(
+      Push(x),
+      Op1(op)
+    )
+
+    case _ => throw new Exception(s"Invalid arity (expected 1, got $args)")
   }
 
   private def compileOp2(op: Op2Impl, args: scala.List[Value[Nothing]]): Unit = args match {
@@ -53,8 +63,7 @@ private class Compiler {
       Op2(op)
     )
 
-    // TODO better err
-    case _ => throw new Exception("Invalid arity")
+    case _ => throw new Exception(s"Invalid arity (expected 2, got $args)")
   }
 }
 

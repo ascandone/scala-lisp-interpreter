@@ -15,3 +15,7 @@ object GreaterThan extends Op2Impl {
     case _ => throw new Exception("GT error")
   }
 }
+
+object Not extends Op1Impl {
+  override def apply(a: Value[OpCode]): Value[OpCode] = Value.fromBool(!a.toBool)
+}

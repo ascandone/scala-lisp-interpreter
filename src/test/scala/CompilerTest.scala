@@ -99,6 +99,15 @@ class CompilerTest extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  it should "compile not" in {
+    testCompileAs("(not true)",
+      Array(
+        Push(Value.fromBool(true)),
+        Op1(Not),
+      )
+    )
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)

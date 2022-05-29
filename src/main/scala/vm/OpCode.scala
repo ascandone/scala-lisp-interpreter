@@ -32,7 +32,7 @@ case class PushClosure(freeVariables: Int, fn: CompiledFunction[OpCode]) extends
 
 case class GetFree(ident: Int) extends OpCode
 
-trait Op1Impl extends OpCode {
+trait Op1Impl {
   def apply(x: Value[OpCode]): Value[OpCode]
 }
 
