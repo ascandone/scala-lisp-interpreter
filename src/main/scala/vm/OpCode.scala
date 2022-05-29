@@ -16,9 +16,9 @@ case class Jump(target: Int) extends OpCode
 
 case class JumpIfNot(target: Int) extends OpCode
 
-case class SetGlobal(name: java.lang.String) extends OpCode
+case class SetGlobal(name: Int) extends OpCode
 
-case class GetGlobal(name: java.lang.String) extends OpCode
+case class GetGlobal(name: Int) extends OpCode
 
 case class SetLocal(ident: Int) extends OpCode
 

@@ -19,7 +19,7 @@ private class Frame(val closure: Closure[OpCode], val basePointer: Int) {
 private class Vm(private var instructions: Array[OpCode]) {
   // TODO this should be outside
   // TODO this should be an array
-  private val globals = mutable.HashMap[java.lang.String, Value[OpCode]]()
+  private val globals = mutable.HashMap[Int, Value[OpCode]]()
   private val stack = new ArrayStack[Value[OpCode]]()
   private val frames = {
     val stack = new ArrayStack[Frame]()
