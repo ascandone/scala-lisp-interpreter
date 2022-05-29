@@ -39,6 +39,45 @@ class CompilerTest extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  it should "compile empty do blocks" in {
+    testCompileAs("(do)",
+      Array(
+        Push(Value.nil)
+      )
+    )
+  }
+
+  it should "compile singleton do blocks" in {
+    testCompileAs("(do 42)",
+      Array(
+        Push(Number(42)),
+      )
+    )
+  }
+
+  it should "compile do blocks with many values" in {
+    testCompileAs("(do 1 2 3)",
+      Array(
+        Push(Number(1)),
+        Pop,
+        Push(Number(2)),
+        Pop,
+        Push(Number(3)),
+      )
+    )
+  }
+
+  it should "treat multiple values as a do block" in {
+    testCompileAs("1 2 3",
+      Array(
+        Push(Number(1)),
+        Pop,
+        Push(Number(2)),
+        Pop,
+        Push(Number(3)),
+      )
+    )
+  }
 
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get

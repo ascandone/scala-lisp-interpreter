@@ -30,7 +30,15 @@ private class Compiler {
 
       case Symbol("do") :: Nil => emitter.emit(Push(Value.nil))
       case Symbol("do") :: value :: Nil => compile(value)
-      case Symbol("do") :: block => ???
+      case Symbol("do") :: block =>
+        for ((value, index) <- block.zipWithIndex) {
+          if (index != 0) {
+            this.emitter.emit(Pop)
+          }
+
+          this.compile(value)
+        }
+
       case _ => ???
     }
   }
