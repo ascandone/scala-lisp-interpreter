@@ -79,6 +79,26 @@ class CompilerTest extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  it should "compile +" in {
+    testCompileAs("(+ 1 2)",
+      Array(
+        Push(Number(1)),
+        Push(Number(2)),
+        Op2(Add),
+      )
+    )
+  }
+
+  it should "compile >" in {
+    testCompileAs("(> 1 2)",
+      Array(
+        Push(Number(1)),
+        Push(Number(2)),
+        Op2(GreaterThan),
+      )
+    )
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)

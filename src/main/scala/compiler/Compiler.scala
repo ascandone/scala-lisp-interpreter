@@ -39,8 +39,22 @@ private class Compiler {
           this.compile(value)
         }
 
+      case (Symbol("+") :: args) => compileOp2(Add, args)
+      case (Symbol(">") :: args) => compileOp2(GreaterThan, args)
+
       case _ => ???
     }
+  }
+
+  private def compileOp2(op: Op2Impl, args: scala.List[Value[Nothing]]): Unit = args match {
+    case scala.List(x, y) => emitter.emit(
+      Push(x),
+      Push(y),
+      Op2(op)
+    )
+
+    // TODO better err
+    case _ => throw new Exception("Invalid arity")
   }
 }
 

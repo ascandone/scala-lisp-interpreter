@@ -36,7 +36,7 @@ trait Op1Impl extends OpCode {
   def apply(x: Value[OpCode]): Value[OpCode]
 }
 
-trait Op2Impl extends OpCode {
+trait Op2Impl {
   def apply(x: Value[OpCode], y: Value[OpCode]): Value[OpCode]
 }
 
