@@ -35,10 +35,8 @@ private class Compiler {
   def collect(): Array[OpCode] = emitter.collect
 
   def compile(value: Value[Nothing]): Unit = value match {
-    case Number(_) => emitter.emit(Push(value))
-    case String(_) => emitter.emit(Push(value))
-    case Symbol("true") => emitter.emit(Push(value))
-    case Symbol("false") => emitter.emit(Push(value))
+    case Number(_) | String(_) | Symbol("true") | Symbol("false") => emitter.emit(Push(value))
+
     case List(forms) => forms match {
       case scala.Nil => emitter.emit(Push(value))
 
