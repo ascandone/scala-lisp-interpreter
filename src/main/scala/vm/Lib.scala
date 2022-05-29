@@ -2,13 +2,15 @@ package vm
 
 import value._
 
-object Lib {
-  def add[Op](a: Value[Op], b: Value[Op]): Value[Op] = (a, b) match {
+object Add extends Op2Impl {
+  override def apply(x: Value[OpCode], y: Value[OpCode]): Value[OpCode] = (x, y) match {
     case (Number(na), Number(nb)) => Number(na + nb)
     case _ => throw new Exception("Add error")
   }
+}
 
-  def greaterThan[Op](a: Value[Op], b: Value[Op]): Value[Op] = (a, b) match {
+object GreaterThan extends Op2Impl {
+  override def apply(a: Value[OpCode], b: Value[OpCode]): Value[OpCode] = (a, b) match {
     case (Number(na), Number(nb)) => Value.fromBool(na > nb)
     case _ => throw new Exception("GT error")
   }
