@@ -3,31 +3,26 @@ package compiler
 import value._
 import vm._
 
-import scala.collection.mutable.ArrayBuffer
+object Compiler {
+  val DO = "do"
+  val TRUE = "true"
+  val FALSE = "false"
+  val IF = "if"
+  val DEF = "def"
+  val LAMBDA = "lambda"
 
-private class Emitter {
-  private val opcodes: ArrayBuffer[OpCode] = ArrayBuffer()
+  def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
+    val block = List[Nothing](
+      Symbol(DO) :: values
+    )
 
-  def placeholder(): Placeholder = {
-    val placeholder = new Placeholder(this)
-    emit(null)
-    placeholder
-  }
+    val compiler = new Compiler()
 
-  def emit(op: OpCode*): Unit =
-    opcodes.addAll(op)
+    compiler.compile(block)
 
-  def collect: Array[OpCode] = opcodes.toArray
-
-  class Placeholder(emitter: Emitter) {
-    private val index = emitter.opcodes.length
-
-    def fill(opCode: (Int) => OpCode): Unit = {
-      emitter.opcodes(index) = opCode(emitter.opcodes.length)
-    }
+    compiler.collect()
   }
 }
-
 
 private class Compiler {
   private val emitter = new Emitter()
@@ -42,9 +37,9 @@ private class Compiler {
 
       case Symbol(Compiler.DO) :: block => compileBlock(block)
 
-      case (Symbol("+") :: args) => compileOp2(Add, args)
-      case (Symbol(">") :: args) => compileOp2(GreaterThan, args)
-      case (Symbol("not") :: args) => compileOp1(Not, args)
+      case Symbol("+") :: args => compileOp2(Add, args)
+      case Symbol(">") :: args => compileOp2(GreaterThan, args)
+      case Symbol("not") :: args => compileOp1(Not, args)
 
       case Symbol(Compiler.IF) :: args => args match {
         case scala.List(cond) => compileIf(cond)
@@ -104,24 +99,3 @@ private class Compiler {
   }
 }
 
-
-object Compiler {
-  val DO = "do";
-  val TRUE = "true";
-  val FALSE = "false";
-  val IF = "if";
-  val DEF = "def";
-  val LAMBDA = "lambda";
-
-  def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
-    val block = List[Nothing](
-      Symbol(DO) :: values
-    )
-
-    val compiler = new Compiler()
-
-    compiler.compile(block)
-
-    compiler.collect()
-  }
-}
