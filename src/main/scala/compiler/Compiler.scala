@@ -42,16 +42,7 @@ private class Compiler {
     case List(forms) => forms match {
       case scala.Nil => emitter.emit(Push(value))
 
-      case Symbol("do") :: Nil => emitter.emit(Push(Value.nil))
-      case Symbol("do") :: value :: Nil => compile(value)
-      case Symbol("do") :: block =>
-        for ((value, index) <- block.zipWithIndex) {
-          if (index != 0) {
-            this.emitter.emit(Pop)
-          }
-
-          this.compile(value)
-        }
+      case Symbol("do") :: block => compileBlock(block)
 
       case (Symbol("+") :: args) => compileOp2(Add, args)
       case (Symbol(">") :: args) => compileOp2(GreaterThan, args)
@@ -65,6 +56,18 @@ private class Compiler {
       }
 
       case _ => ???
+    }
+  }
+
+  private def compileBlock(block: scala.List[Value[Nothing]]): Unit = block match {
+    case Nil => emitter.emit(Push(Value.nil))
+    case value :: Nil => compile(value)
+    case _ => for ((value, index) <- block.zipWithIndex) {
+      if (index != 0) {
+        this.emitter.emit(Pop)
+      }
+
+      this.compile(value)
     }
   }
 
