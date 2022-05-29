@@ -5,7 +5,7 @@ import value._
 import value.parser.Parser
 import vm._
 
-class CompilerTest extends AnyFlatSpec with should.Matchers {
+class CompilerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "compile constants" in {
     testCompileAs("42",
