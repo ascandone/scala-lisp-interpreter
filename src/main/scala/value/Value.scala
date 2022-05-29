@@ -2,10 +2,13 @@ package value
 
 
 object Value {
-  def true_[Op]: Value[Op] = Symbol("true")
 
-  def false_[Op]: Value[Op] = Symbol("false")
-
+  def fromBool[Op](boolean: Boolean): Value[Op] = if (boolean) {
+    Symbol("true")
+  } else {
+    Symbol("false")
+  }
+  
   def nil[Op]: Value[Op] = List()
 }
 

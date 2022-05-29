@@ -47,7 +47,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
     val instructions: Array[OpCode] = Array(
       /* 0 */ Push(Number(0)),
-      /* 1 */ Push(Value.false_),
+      /* 1 */ Push(Value.fromBool(false)),
       /* 2 */ JumpIfNot(4),
       /* 3 */ Push(Number(1)),
       /* 4 */
@@ -60,7 +60,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
     val instructions: Array[OpCode] = Array(
       /* 0 */ Push(Number(0)),
-      /* 1 */ Push(Value.true_),
+      /* 1 */ Push(Value.fromBool(true)),
       /* 2 */ JumpIfNot(4),
       /* 3 */ Push(Number(1)),
       /* 4 */
@@ -149,5 +149,48 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
     Vm.run(instructions) should be(Number(300))
   }
+
+  it should "should execute recursive function" in {
+    /*
+      (defun f (n)
+        (if (> n $LIM)
+          n
+          (f (+ 1 n))))
+
+      (f 0)
+    */
+
+    val LIM = 4
+
+    val fn = CompiledFunction[OpCode](
+      argsNumber = 1,
+      instructions = Array(
+        /* 00 */ GetLocal(0),
+        /* 01 */ Push(Number(LIM)),
+        /* 02 */ Op2(Lib.greaterThan),
+        /* 03 */ JumpIfNot(6),
+        /* 04 */ GetLocal(0),
+        /* 05 */ Jump(11),
+        /* 06 */ Push(Number(1)), // <- 03
+        /* 07 */ GetLocal(0),
+        /* 08 */ Op2(Lib.add),
+        /* 09 */ GetGlobal("f"),
+        /* 10 */ Call(1),
+        /* 11 */ Return,
+      )
+    )
+
+    val instructions = Array[OpCode](
+      Push(fn),
+      SetGlobal("f"),
+      Pop,
+      Push(Number(0)),
+      GetGlobal("f"),
+      Call(1),
+    )
+
+    Vm.run(instructions) should be(Number(LIM + 1))
+  }
+
 
 }
