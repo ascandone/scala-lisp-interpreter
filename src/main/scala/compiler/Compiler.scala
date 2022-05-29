@@ -35,18 +35,18 @@ private class Compiler {
   def collect(): Array[OpCode] = emitter.collect
 
   def compile(value: Value[Nothing]): Unit = value match {
-    case Number(_) | String(_) | Symbol("true") | Symbol("false") => emitter.emit(Push(value))
+    case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) => emitter.emit(Push(value))
 
     case List(forms) => forms match {
       case scala.Nil => emitter.emit(Push(value))
 
-      case Symbol("do") :: block => compileBlock(block)
+      case Symbol(Compiler.DO) :: block => compileBlock(block)
 
       case (Symbol("+") :: args) => compileOp2(Add, args)
       case (Symbol(">") :: args) => compileOp2(GreaterThan, args)
       case (Symbol("not") :: args) => compileOp1(Not, args)
 
-      case Symbol("if") :: args => args match {
+      case Symbol(Compiler.IF) :: args => args match {
         case scala.List(cond) => compileIf(cond)
         case scala.List(cond, a) => compileIf(cond, a)
         case scala.List(cond, a, b) => compileIf(cond, a, b)
@@ -106,9 +106,16 @@ private class Compiler {
 
 
 object Compiler {
+  val DO = "do";
+  val TRUE = "true";
+  val FALSE = "false";
+  val IF = "if";
+  val DEF = "def";
+  val LAMBDA = "lambda";
+
   def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
     val block = List[Nothing](
-      Symbol("do") :: values
+      Symbol(DO) :: values
     )
 
     val compiler = new Compiler()
