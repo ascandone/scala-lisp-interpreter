@@ -27,7 +27,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("(> 200 10)", "true")
     expectVmToEvalAs("(> 10 10)", "false")
   }
-  
+
   behavior of "native operations"
   they should "work when nested" in {
     expectVmToEvalAs("(! (> (+ 100 1) 100))", "false")
@@ -96,6 +96,16 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     """,
       "12"
     )
+  }
+
+
+  behavior of "abstraction and application"
+  they should "work with no arguments" in {
+    expectVmToEvalAs("""((lambda () "ok"))""", """"ok"""")
+  }
+
+  they should "resolve lambda saved in def" in {
+    expectVmToEvalAs("""(def f (lambda () "ok")) (f)""", """"ok"""")
   }
 
 

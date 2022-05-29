@@ -19,7 +19,7 @@ sealed trait Value[+Op] {
     case _ => true
   }
 
-  override def toString: java.lang.String = this match {
+  def show: java.lang.String = this match {
     case Symbol(name) => name
     case String(str) => s"\"$str\""
     case Number(n) =>
@@ -29,8 +29,8 @@ sealed trait Value[+Op] {
         n.toString
       }
     case List(scala.Nil) => "nil"
-    case List(values) => "(" + values.map(_.toString).mkString(" ") + ")"
-    case _ => "TODO"
+    case List(values) => "(" + values.map(_.show).mkString(" ") + ")"
+    case CompiledFunction(_, _, _) => "#<Function>"
   }
 }
 

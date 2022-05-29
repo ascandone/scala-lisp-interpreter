@@ -26,10 +26,7 @@ object Compiler {
   }
 }
 
-private class Compiler {
-  // TODO this should be outside
-  private val globals = new mutable.HashMap[java.lang.String, Int]()
-
+private class Compiler(val globals: mutable.HashMap[java.lang.String, Int] = new mutable.HashMap()) {
   private val emitter = new Emitter()
 
   def collect(): Array[OpCode] = emitter.collect
@@ -66,7 +63,37 @@ private class Compiler {
 
         case _ => throw new Exception("Invalid `def` arguments")
       }
+
+      case Symbol(Compiler.LAMBDA) :: args => args match {
+        case List(params) :: body :: Nil => compileLambda(
+          params.map {
+            case Symbol(name) => name
+            case _ => throw new Exception("Invalid `lambda` parameter (expected a string)")
+          },
+          body,
+        )
+        case _ => throw new Exception("Invalid `lambda` arguments")
+      }
+
+      case f :: args =>
+        args.foreach {
+          compile
+        }
+        compile(f)
+        emitter.emit(Call(args.length))
+
+
     }
+  }
+
+  private def compileLambda(params: scala.List[java.lang.String], body: Value[Nothing] = List.of()): Unit = {
+    val compiler = new Compiler(globals)
+    compiler.compile(body)
+    compiler.emitter.emit(Return)
+    val instructions = compiler.collect()
+    emitter.emit(
+      Push(CompiledFunction(instructions))
+    )
   }
 
   private def compileDef(name: java.lang.String, value: Value[Nothing] = List.of()): Unit = {
