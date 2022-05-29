@@ -108,6 +108,37 @@ class CompilerTest extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  it should "compile a if expression of values" in {
+    testCompileAs("(if true \"when true\" \"when false\")",
+      Array(
+        /* 0 */ Push(Value.fromBool(true)),
+        /* 1 */ JumpIfNot(4),
+        /* 2 */ Push(String("when true")),
+        /* 3 */ Jump(5),
+        /* 4 */ Push(String("when false")),
+        /* 5 */
+      )
+    )
+  }
+
+  it should "compile a if expression of expressions" in {
+    testCompileAs("(if (> 100 200) (+ 10 20) (not ()))",
+      Array(
+        /* 00 */ Push(Number(100)),
+        /* 01 */ Push(Number(200)),
+        /* 02 */ Op2(GreaterThan),
+        /* 03 */ JumpIfNot(8),
+        /* 04 */ Push(Number(10)), // if branch
+        /* 05 */ Push(Number(20)),
+        /* 06 */ Op2(Add),
+        /* 07 */ Jump(10),
+        /* 08 */ Push(List.of()), // else branch
+        /* 09 */ Op1(Not), // else branch
+        /* 10 */
+      )
+    )
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)

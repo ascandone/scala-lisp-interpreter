@@ -8,10 +8,24 @@ import scala.collection.mutable.ArrayBuffer
 private class Emitter {
   private val opcodes: ArrayBuffer[OpCode] = ArrayBuffer()
 
+  def placeholder(): Placeholder = {
+    val placeholder = new Placeholder(this)
+    emit(null)
+    placeholder
+  }
+
   def emit(op: OpCode*): Unit =
     opcodes.addAll(op)
 
   def collect: Array[OpCode] = opcodes.toArray
+
+  class Placeholder(emitter: Emitter) {
+    private val index = emitter.opcodes.length
+
+    def fill(opCode: (Int) => OpCode): Unit = {
+      emitter.opcodes(index) = opCode(emitter.opcodes.length)
+    }
+  }
 }
 
 
@@ -43,8 +57,30 @@ private class Compiler {
       case (Symbol(">") :: args) => compileOp2(GreaterThan, args)
       case (Symbol("not") :: args) => compileOp1(Not, args)
 
+      case Symbol("if") :: args => args match {
+        case scala.List(cond) => compileIf(cond)
+        case scala.List(cond, a) => compileIf(cond, a)
+        case scala.List(cond, a, b) => compileIf(cond, a, b)
+        case _ => throw new Exception("Invalid `if` arity")
+      }
+
       case _ => ???
     }
+  }
+
+  private def compileIf(
+                         cond: Value[Nothing],
+                         branchTrue: Value[Nothing] = Value.nil,
+                         branchFalse: Value[Nothing] = Value.nil
+                       ): Unit = {
+    compile(cond)
+    val beginBranchTrue = emitter.placeholder()
+    compile(branchTrue)
+
+    val beginBranchFalse = emitter.placeholder()
+    beginBranchTrue.fill(JumpIfNot)
+    compile(branchFalse)
+    beginBranchFalse.fill(Jump)
   }
 
   private def compileOp1(op: Op1Impl, args: scala.List[Value[Nothing]]): Unit = args match {
