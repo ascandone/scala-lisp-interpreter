@@ -183,6 +183,18 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """, (LIM + 1).toString)
   }
 
+  behavior of "closures"
+  they should "have access to outer scope" in {
+    expectVmToEvalAs(
+      """
+      (def f
+        (lambda (a)
+          (lambda (b) (+ a b))))
+
+      ((f 10) 100)
+      """, "110")
+  }
+
 
   def expectVmToEvalAs(str: java.lang.String, expected: java.lang.String): Unit = {
     val parsed = Parser.run(str).get
