@@ -6,7 +6,7 @@ import value.Value
 import scala.collection.mutable
 
 object Vm {
-  def run(instructions: Array[OpCode]): Value = {
+  def run(instructions: Array[OpCode]): Value[OpCode] = {
     val vm = new Vm(instructions)
     vm.run()
   }
@@ -19,15 +19,15 @@ private class Frame(val instructions: Array[OpCode]) {
 private class Vm(private var instructions: Array[OpCode]) {
   // TODO this should be outside
   // TODO this should be an array
-  private val globals = mutable.HashMap[String, Value]()
-  private val stack = new ArrayStack[Value]()
+  private val globals = mutable.HashMap[String, Value[OpCode]]()
+  private val stack = new ArrayStack[Value[OpCode]]()
   private val frames = {
     val stack = new ArrayStack[Frame]()
     stack.push(new Frame(instructions))
     stack
   }
 
-  def run(): Value = {
+  def run(): Value[OpCode] = {
     while ( {
       val currentFrame = frames.peek()
       currentFrame.ip < currentFrame.instructions.length
@@ -45,7 +45,6 @@ private class Vm(private var instructions: Array[OpCode]) {
 
     stack.peek()
   }
-
 
   private def step(opCode: OpCode): Unit = opCode match {
     case Push(value) => stack.push(value)

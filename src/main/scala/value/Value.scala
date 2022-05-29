@@ -1,12 +1,15 @@
 package value
 
+
 object Value {
-  val true_ : Value = Symbol("true")
-  val false_ : Value = Symbol("false")
-  val nil: Value = List()
+  def true_[Op]: Value[Op] = Symbol("true")
+
+  def false_[Op]: Value[Op] = Symbol("false")
+
+  def nil[Op]: Value[Op] = List()
 }
 
-sealed trait Value {
+sealed trait Value[Op] {
   def toBool: Boolean = this match {
     case Symbol("false") => false
     case List(scala.Nil) => false
@@ -14,10 +17,16 @@ sealed trait Value {
   }
 }
 
-case class Number(value: Float) extends Value
+case class Number[Op](value: Float) extends Value[Op]
 
-case class String(value: java.lang.String) extends Value
+case class String[Op](value: java.lang.String) extends Value[Op]
 
-case class Symbol(value: java.lang.String) extends Value
+case class Symbol[Op](value: java.lang.String) extends Value[Op]
 
-case class List(value: scala.List[Value] = scala.List.empty) extends Value
+case class List[Op](value: scala.List[Value[Op]] = scala.List.empty) extends Value[Op]
+
+case class Function[Op](
+                         instructions: Array[Op],
+                         argsNumber: Int = 0,
+                         localsNumber: Int = 0,
+                       ) extends Value[Op]
