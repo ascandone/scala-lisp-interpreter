@@ -31,6 +31,7 @@ sealed trait Value[+Op] {
     case List(scala.Nil) => "nil"
     case List(values) => "(" + values.map(_.show).mkString(" ") + ")"
     case CompiledFunction(_, _) => "#<Function>"
+    case Closure(_, _) => "#<Closure>"
   }
 }
 
