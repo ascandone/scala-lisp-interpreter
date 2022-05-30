@@ -192,46 +192,46 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
 
 class ArgsCompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile regular args" in {
-    CompiledArgs() should be(new CompiledArgs())
-    CompiledArgs("a") should be(new CompiledArgs(required = scala.List("a")))
-    CompiledArgs("a", "b") should be(new CompiledArgs(required = scala.List("a", "b")))
+    CompiledParams() should be(new CompiledParams())
+    CompiledParams("a") should be(new CompiledParams(required = scala.List("a")))
+    CompiledParams("a", "b") should be(new CompiledParams(required = scala.List("a", "b")))
   }
 
   it should "compile optional args" in {
-    CompiledArgs("&opt") should be(new CompiledArgs())
-    CompiledArgs("&opt", "a") should be(new CompiledArgs(optionals = scala.List("a")))
-    CompiledArgs("&opt", "a", "b") should be(new CompiledArgs(optionals = scala.List("a", "b")))
+    CompiledParams("&opt") should be(new CompiledParams())
+    CompiledParams("&opt", "a") should be(new CompiledParams(optionals = scala.List("a")))
+    CompiledParams("&opt", "a", "b") should be(new CompiledParams(optionals = scala.List("a", "b")))
   }
 
   it should "compile regular args mixed with optional" in {
-    CompiledArgs("x", "&opt") should be(new CompiledArgs(
+    CompiledParams("x", "&opt") should be(new CompiledParams(
       required = scala.List("x")
     ))
 
-    CompiledArgs("x", "&opt", "a") should be(new CompiledArgs(
+    CompiledParams("x", "&opt", "a") should be(new CompiledParams(
       required = scala.List("x"),
       optionals = scala.List("a")
     ))
 
-    CompiledArgs("x", "&opt", "a", "b") should be(new CompiledArgs(
+    CompiledParams("x", "&opt", "a", "b") should be(new CompiledParams(
       required = scala.List("x"),
       optionals = scala.List("a", "b")
     ))
   }
 
   it should "compile rest args" in {
-    CompiledArgs("&rest", "a") should be(new CompiledArgs(rest = Some("a")))
+    CompiledParams("&rest", "a") should be(new CompiledParams(rest = Some("a")))
   }
 
   it should "compile regular args mixed with rest" in {
-    CompiledArgs("x", "y", "&rest", "a") should be(new CompiledArgs(
+    CompiledParams("x", "y", "&rest", "a") should be(new CompiledParams(
       required = scala.List("x", "y"),
       rest = Some("a"),
     ))
   }
 
   it should "compile regular args mixed with optional and rest" in {
-    CompiledArgs("x", "y", "&opt", "o1", "o2", "&rest", "a") should be(new CompiledArgs(
+    CompiledParams("x", "y", "&opt", "o1", "o2", "&rest", "a") should be(new CompiledParams(
       required = scala.List("x", "y"),
       optionals = scala.List("o1", "o2"),
       rest = Some("a"),

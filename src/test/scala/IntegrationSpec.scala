@@ -259,6 +259,30 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """, (10 + 42 + 100 + 20).toString)
   }
 
+  they should "handle &opt special args" in {
+    expectVmToEvalAs("((lambda (&opt a b) a) 0 1)", "0")
+    expectVmToEvalAs("((lambda (&opt a b) b) 0 1)", "1")
+    expectVmToEvalAs("((lambda (&opt a b) a) 0)", "0")
+    expectVmToEvalAs("((lambda (&opt a b) b) 0)", "()")
+    expectVmToEvalAs("((lambda (&opt a b) a))", "()")
+    expectVmToEvalAs("((lambda (&opt a b) b))", "()")
+  }
+
+  they should "handle &rest special args" in {
+    expectVmToEvalAs("((lambda (&rest a) a))", "()")
+    expectVmToEvalAs("((lambda (&rest a) a) 0)", "(0)")
+    expectVmToEvalAs("((lambda (&rest a) a) 0 1)", "(0 1)")
+  }
+
+  they should "handle regular arg mixed with &opt and &rest" in {
+    expectVmToEvalAs("((lambda (x &opt o &rest r) o) 0)", "()")
+    expectVmToEvalAs("((lambda (x &opt o &rest r) o) 0 1)", "1")
+
+    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1)", "()")
+    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1 2)", "(2)")
+    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1 2 3)", "(2 3)")
+  }
+
 
   def expectVmToEvalAs(str: java.lang.String, expected: java.lang.String): Unit = {
     val parsed = Parser.run(str).get

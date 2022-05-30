@@ -104,7 +104,15 @@ class CompilerLoop(val symbolTable: SymbolTable) {
 
   private def compileLambda(params: scala.List[java.lang.String], body: Value[Nothing] = List.of()): Unit = {
     val compiler = new CompilerLoop(this.symbolTable.nested)
-    for (param <- params) {
+
+    val compiledParams = CompiledParams.compile(params)
+    for (param <- compiledParams.required) {
+      compiler.symbolTable.define(param)
+    }
+    for (param <- compiledParams.optionals) {
+      compiler.symbolTable.define(param)
+    }
+    for (param <- compiledParams.rest) {
       compiler.symbolTable.define(param)
     }
 
@@ -114,9 +122,7 @@ class CompilerLoop(val symbolTable: SymbolTable) {
 
     val fn = CompiledFunction(
       instructions = instructions,
-      arity = ArgumentsArity(
-        required = params.length
-      )
+      arity = compiledParams.toArity,
     )
 
     if (compiler.symbolTable.freeSymbols.isEmpty) {
@@ -190,21 +196,28 @@ class CompilerLoop(val symbolTable: SymbolTable) {
   }
 }
 
-private case class CompiledArgs(
-                                 required: scala.List[java.lang.String] = Nil,
-                                 optionals: scala.List[java.lang.String] = Nil,
-                                 rest: Option[java.lang.String] = None,
-                               )
+private case class CompiledParams(
+                                   required: scala.List[java.lang.String] = Nil,
+                                   optionals: scala.List[java.lang.String] = Nil,
+                                   rest: Option[java.lang.String] = None,
+                                 ) {
 
-private object CompiledArgs {
+  def toArity: ArgumentsArity = ArgumentsArity(
+    required = required.length,
+    optionals = optionals.length,
+    rest = rest.isDefined,
+  )
+}
+
+private object CompiledParams {
   val OPTIONAL = "&opt"
   val REST = "&rest"
 
-  def apply(args: java.lang.String*): CompiledArgs = compile(args.toList)
+  def apply(args: java.lang.String*): CompiledParams = compile(args.toList)
 
-  def compile(args: scala.List[java.lang.String]): CompiledArgs =
+  def compile(args: scala.List[java.lang.String]): CompiledParams =
     args match {
-      case Nil => new CompiledArgs()
+      case Nil => new CompiledParams()
       case OPTIONAL :: opts => compileOpt(opts)
       case REST :: args1 => compileRest(args1)
       case arg :: tl =>
@@ -212,9 +225,9 @@ private object CompiledArgs {
         rc.copy(required = arg :: rc.required)
     }
 
-  private def compileOpt(args: scala.List[java.lang.String]): CompiledArgs =
+  private def compileOpt(args: scala.List[java.lang.String]): CompiledParams =
     args match {
-      case Nil => new CompiledArgs()
+      case Nil => new CompiledParams()
       case OPTIONAL :: _ => throw new Exception("duplicate &opt is not allowed")
       case REST :: args1 => compileRest(args1)
       case arg :: tl =>
@@ -222,12 +235,12 @@ private object CompiledArgs {
         rc.copy(optionals = arg :: rc.optionals)
     }
 
-  private def compileRest(args: scala.List[java.lang.String]): CompiledArgs =
+  private def compileRest(args: scala.List[java.lang.String]): CompiledParams =
     args match {
       case Nil => throw new Exception("no labels after &rest")
       case OPTIONAL :: _ => throw new Exception("duplicate &opt is not allowed")
       case REST :: _ => throw new Exception("duplicate &rest is not allowed")
-      case arg :: Nil => new CompiledArgs(rest = Some(arg))
+      case arg :: Nil => new CompiledParams(rest = Some(arg))
       case _ :: _ :: _ => throw new Exception("only one argument after &rest is allowed")
     }
 }
