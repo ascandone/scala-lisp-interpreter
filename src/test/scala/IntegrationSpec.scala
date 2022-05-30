@@ -1,43 +1,44 @@
 import interpreter.Interpreter
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
-import value.parser.Parser
+import value._
+import vm.OpCode
 
 class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
 
   behavior of "atomic values"
   they should "evaluate as themselves" in {
-    expectVmToEvalAs("42", "42")
-    expectVmToEvalAs("true", "true")
-    expectVmToEvalAs("false", "false")
-    expectVmToEvalAs("\"abc\"", "\"abc\"")
-    expectVmToEvalAs("()", "()")
+    expectVmToEvalAs("42", 42)
+    expectVmToEvalAs("true", true)
+    expectVmToEvalAs("false", false)
+    expectVmToEvalAs("\"abc\"", "abc")
+    expectVmToEvalAs("()", Nil)
   }
 
   behavior of "+"
   it should "sum two numbers" in {
-    expectVmToEvalAs("(+ 10 20)", "30")
+    expectVmToEvalAs("(+ 10 20)", 30)
   }
 
   behavior of ">"
   it should "behave as > operator" in {
-    expectVmToEvalAs("(> 10 200)", "false")
-    expectVmToEvalAs("(> 200 10)", "true")
-    expectVmToEvalAs("(> 10 10)", "false")
+    expectVmToEvalAs("(> 10 200)", false)
+    expectVmToEvalAs("(> 200 10)", true)
+    expectVmToEvalAs("(> 10 10)", false)
   }
 
   behavior of "native operations"
   they should "work when nested" in {
-    expectVmToEvalAs("(! (> (+ 100 1) 100))", "false")
+    expectVmToEvalAs("(! (> (+ 100 1) 100))", false)
   }
 
   // TODO should reify native operations
 
   behavior of "def expression"
   it should "bind value to globals" in {
-    expectVmToEvalAs("(def x 42) x", "42")
-    expectVmToEvalAs("(def x (+ 1 2)) x", "3")
+    expectVmToEvalAs("(def x 42) x", 42)
+    expectVmToEvalAs("(def x (+ 1 2)) x", 3)
     // TODO lambda
   }
 
@@ -51,19 +52,19 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
         (def x 1)
 
         (f)
-        """, "0")
+        """, 0)
   }
 
   behavior of "if expression"
   it should "return the first argument when truthy" in {
-    expectVmToEvalAs("(if true (+ 1 2) ())", "3")
-    expectVmToEvalAs("(if 0 (+ 1 2) ())", "3")
-    expectVmToEvalAs("(if 42 (+ 1 2) ())", "3")
+    expectVmToEvalAs("(if true (+ 1 2) ())", 3)
+    expectVmToEvalAs("(if 0 (+ 1 2) ())", 3)
+    expectVmToEvalAs("(if 42 (+ 1 2) ())", 3)
   }
 
   it should "return the second argument when not truthy" in {
-    expectVmToEvalAs("""(if false (+ 1 2) "nope")""", """"nope"""")
-    expectVmToEvalAs("""(if () (+ 1 2) "nope")""", """"nope"""")
+    expectVmToEvalAs("""(if false (+ 1 2) "nope")""", "nope")
+    expectVmToEvalAs("""(if () (+ 1 2) "nope")""", "nope")
   }
 
   it should "work with complex expressions" in {
@@ -74,7 +75,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     "ok"
     "fail")
     """,
-      """"ok""""
+      "ok"
     )
 
     expectVmToEvalAs(
@@ -84,7 +85,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
         "ok"
         "fail")
     """,
-      """"ok""""
+      "ok"
     )
 
     expectVmToEvalAs(
@@ -95,7 +96,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
         "ok"
         "fail")
     """,
-      """"ok""""
+      "ok"
     )
 
     expectVmToEvalAs(
@@ -106,22 +107,22 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
         (+ 1 (+ 1 10))
         "fail")
     """,
-      "12"
+      12
     )
   }
 
 
   behavior of "abstraction and application"
   they should "work with no arguments" in {
-    expectVmToEvalAs("""((lambda () "ok"))""", """"ok"""")
+    expectVmToEvalAs("""((lambda () "ok"))""", "ok")
   }
 
   they should "work with two arguments" in {
-    expectVmToEvalAs("""((lambda (a b) (+ a b)) 100 200)""", "300")
+    expectVmToEvalAs("""((lambda (a b) (+ a b)) 100 200)""", 300)
   }
 
   they should "resolve lambda saved in def" in {
-    expectVmToEvalAs("""(def f (lambda () "ok")) (f)""", """"ok"""")
+    expectVmToEvalAs("""(def f (lambda () "ok")) (f)""", "ok")
   }
 
   they should "resolve local arguments" in {
@@ -134,7 +135,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
         (f)
 
-        """, "42")
+        """, 42)
   }
 
   they should "resolve be able to define global values" in {
@@ -146,7 +147,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
         (f 42)
         glob
-        """, "42")
+        """, 42)
   }
 
   they should "resolve be able to define global values, initialized with nil, before their call" in {
@@ -157,7 +158,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
             (def glob x)))
 
         glob
-        """, "()")
+        """, Nil)
   }
 
   they should "handle nested frames" in {
@@ -167,7 +168,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
         (def two (lambda () (one)))
         (def three (lambda () (two)))
         (three)
-        """, "100")
+        """, 100)
   }
 
   they should "be able to read global env" in {
@@ -176,7 +177,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       (def x 42)
       (def f (lambda () x))
       (f)
-        """, "42")
+        """, 42)
   }
 
   they should "handle inner if expressions" in {
@@ -189,7 +190,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
               (if b "true" "false"))))
 
        (bool->string true)
-        """, "\"true\"")
+        """, "true")
   }
 
   they should "handle if expressions inside arguments list" in {
@@ -197,7 +198,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """
       (def id (lambda (ignored x) x))
       (id "ignore me" (if true "a" "b"))
-      """, "\"a\"")
+      """, "a")
   }
 
   they should "handle functions passed as argument" in {
@@ -205,16 +206,16 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """
       (def caller (lambda (f) (f 10)))
       (caller (lambda (n) (+ n 1)))
-      """, "11")
+      """, 11)
   }
 
   they should "respect the arguments order" in {
-    expectVmToEvalAs("((lambda (x y) x) 0 1)", "0")
-    expectVmToEvalAs("((lambda (x y) y) 0 1)", "1")
+    expectVmToEvalAs("((lambda (x y) x) 0 1)", 0)
+    expectVmToEvalAs("((lambda (x y) y) 0 1)", 1)
   }
 
   they should "shadow parameter arguments" in {
-    expectVmToEvalAs("((lambda (x x) x) 0 1)", "1")
+    expectVmToEvalAs("((lambda (x x) x) 0 1)", 1)
   }
 
   they should "work with recursive bindings" in {
@@ -228,7 +229,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
           (f (+ 1 n)))))
 
       (f 0)
-      """, (LIM + 1).toString)
+      """, LIM + 1)
   }
 
   behavior of "closures"
@@ -240,7 +241,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
           (lambda (b) (+ a b))))
 
       ((f 10) 100)
-      """, "110")
+      """, 110)
   }
 
   they should "work with global and local def" in {
@@ -255,38 +256,36 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
               (+ glob (+ l (+ a b)))))))
 
         ((f 10) 100)
-      """, (10 + 42 + 100 + 20).toString)
+      """, 10 + 42 + 100 + 20)
   }
 
   they should "handle &opt special args" in {
-    expectVmToEvalAs("((lambda (&opt a b) a) 0 1)", "0")
-    expectVmToEvalAs("((lambda (&opt a b) b) 0 1)", "1")
-    expectVmToEvalAs("((lambda (&opt a b) a) 0)", "0")
-    expectVmToEvalAs("((lambda (&opt a b) b) 0)", "()")
-    expectVmToEvalAs("((lambda (&opt a b) a))", "()")
-    expectVmToEvalAs("((lambda (&opt a b) b))", "()")
+    expectVmToEvalAs("((lambda (&opt a b) a) 0 1)", 0)
+    expectVmToEvalAs("((lambda (&opt a b) b) 0 1)", 1)
+    expectVmToEvalAs("((lambda (&opt a b) a) 0)", 0)
+    expectVmToEvalAs("((lambda (&opt a b) b) 0)", Nil)
+    expectVmToEvalAs("((lambda (&opt a b) a))", Nil)
+    expectVmToEvalAs("((lambda (&opt a b) b))", Nil)
   }
 
   they should "handle &rest special args" in {
-    expectVmToEvalAs("((lambda (&rest a) a))", "()")
-    expectVmToEvalAs("((lambda (&rest a) a) 0)", "(0)")
-    expectVmToEvalAs("((lambda (&rest a) a) 0 1)", "(0 1)")
+    expectVmToEvalAs("((lambda (&rest a) a))", Nil)
+    expectVmToEvalAs("((lambda (&rest a) a) 0)", List.of(0))
+    expectVmToEvalAs("((lambda (&rest a) a) 0 1)", List.of(0, 1))
   }
 
   they should "handle regular arg mixed with &opt and &rest" in {
-    expectVmToEvalAs("((lambda (x &opt o &rest r) o) 0)", "()")
-    expectVmToEvalAs("((lambda (x &opt o &rest r) o) 0 1)", "1")
+    expectVmToEvalAs("((lambda (x &opt o &rest r) o) 0)", Nil)
+    expectVmToEvalAs("((lambda (x &opt o &rest r) o) 0 1)", 1)
 
-    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1)", "()")
-    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1 2)", "(2)")
-    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1 2 3)", "(2 3)")
+    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1)", Nil)
+    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1 2)", List.of(2))
+    expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1 2 3)", List.of(2, 3))
   }
 
 
-  def expectVmToEvalAs(str: java.lang.String, expected: java.lang.String): Unit = {
+  def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
     val result = Interpreter.parseRun(str)
-    val parsedExpected = Parser.run(expected).get.head
-
-    result should be(parsedExpected)
+    result should be(expected)
   }
 }
