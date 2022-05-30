@@ -8,7 +8,7 @@ private class Emitter {
   private val opcodes: ArrayBuffer[OpCode] = ArrayBuffer()
 
   def placeholder(): Placeholder = {
-    val placeholder = new Placeholder(this)
+    val placeholder = new Placeholder
     emit(null)
     placeholder
   }
@@ -18,11 +18,11 @@ private class Emitter {
 
   def collect: Array[OpCode] = opcodes.toArray
 
-  class Placeholder(emitter: Emitter) {
-    private val index = emitter.opcodes.length
+  class Placeholder {
+    private val index = opcodes.length
 
     def fill(opCode: (Int) => OpCode): Unit = {
-      emitter.opcodes(index) = opCode(emitter.opcodes.length)
+      opcodes(index) = opCode(opcodes.length)
     }
   }
 }
