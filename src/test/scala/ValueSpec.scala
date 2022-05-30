@@ -87,14 +87,14 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     arity parse scala.List("a") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
-        optionals = (Nil, 0)
+        optionals = (Nil, 1)
       ))
     )
 
     arity parse scala.List("a", "b") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
-        optionals = (Nil, 0)
+        optionals = (scala.List("b"), 0)
       ))
     )
   }
@@ -113,7 +113,7 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     arity parse scala.List("a", "b") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
-        optionals = (scala.List("a"), 0),
+        optionals = (scala.List("b"), 0),
         rest = Some(Nil)
       ))
     )
@@ -121,7 +121,7 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     arity parse scala.List("a", "b", "c") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
-        optionals = (scala.List("a"), 0),
+        optionals = (scala.List("b"), 0),
         rest = Some(scala.List("c"))
       ))
     )
@@ -129,7 +129,7 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     arity parse scala.List("a", "b", "c", "d") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
-        optionals = (scala.List("a"), 0),
+        optionals = (scala.List("b"), 0),
         rest = Some(scala.List("c", "d"))
       ))
     )

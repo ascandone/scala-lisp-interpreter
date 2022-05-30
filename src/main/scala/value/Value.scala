@@ -66,15 +66,13 @@ case class ArgumentsArity(
   def size: Int = required + optionals + (if (rest) 1 else 0)
 
   def parse[Value](args: scala.List[Value]): Either[ArgumentsArity.ParsingReason, ArgumentsArity.ParsedArguments[Value]] = {
-    parseRequiredArgs(args).flatMap(res => {
-      val (requiredArgs, afterRequired) = res
-
-      // TODO optionals
-      val (optionals, afterOptionals) = ((Nil, 0), afterRequired)
+    parseRequired(args).flatMap(res => {
+      val (required, afterRequired) = res
+      val (optionals, afterOptionals) = parseOpt(afterRequired)
 
       parseRest(afterOptionals).map(rest => {
         ArgumentsArity.ParsedArguments(
-          required = requiredArgs,
+          required = required,
           optionals = optionals,
           rest = rest,
         )
@@ -82,8 +80,7 @@ case class ArgumentsArity(
     })
   }
 
-
-  private def parseRequiredArgs[Value](args: scala.List[Value]):
+  private def parseRequired[Value](args: scala.List[Value]):
   Either[ArgumentsArity.ParsingReason, (scala.List[Value], scala.List[Value])] =
   // TODO do in one pass
     if (required > args.size) {
@@ -95,7 +92,14 @@ case class ArgumentsArity(
       Right(args.splitAt(required))
     }
 
-  private def parseRest[Value](afterOptionals: scala.List[Value]) =
+  private def parseOpt[Value](afterRequired: scala.List[Value]): ((scala.List[Value], Int), scala.List[Value]) = {
+    // TODO do in one pass
+    val (optionalsArgs, extra) = afterRequired.splitAt(optionals)
+    ((optionalsArgs, optionals - optionalsArgs.length), extra)
+  }
+
+  private def parseRest[Value](afterOptionals: scala.List[Value]):
+  Either[ArgumentsArity.TooManyArgs, Option[scala.List[Value]]] =
     if (rest) {
       // There cannot be `TooManyArgs` with rest args
       Right(Some(afterOptionals))
