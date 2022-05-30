@@ -27,20 +27,17 @@ class ParserSpec extends AnyFlatSpec with should.Matchers {
 
   it should "parse a nonempty list" in {
     Parser.run("(1 2 3)").get should be(
-      scala.List(List[Nothing](scala.List(Number(1), Number(2), Number(3)))))
+      scala.List(List[Nothing](scala.List(1, 2, 3))))
   }
 
   it should "parse a nested lists" in {
     Parser.run("(1 () (1 2) 3)").get should be(
-      scala.List(
-        List.of[Nothing](
-          Number(1),
+      scala.List[Value[Nothing]](
+        List.of(
+          1,
           List.of(),
-          List.of[Nothing](
-            Number(1),
-            Number(2),
-          ),
-          Number(3))
+          List.of(1, 2),
+          3)
       )
     )
   }

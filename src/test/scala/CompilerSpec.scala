@@ -10,13 +10,13 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile constants" in {
     testCompileAs("42",
       Array(
-        Push(Number(42))
+        Push(42)
       )
     )
 
     testCompileAs("\"hello\"",
       Array(
-        Push(String("hello"))
+        Push("hello")
       )
     )
 
@@ -50,7 +50,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile singleton do blocks" in {
     testCompileAs("(do 42)",
       Array(
-        Push(Number(42)),
+        Push(42),
       )
     )
   }
@@ -58,11 +58,11 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile do blocks with many values" in {
     testCompileAs("(do 1 2 3)",
       Array(
-        Push(Number(1)),
+        Push(1),
         Pop,
-        Push(Number(2)),
+        Push(2),
         Pop,
-        Push(Number(3)),
+        Push(3),
       )
     )
   }
@@ -70,11 +70,11 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "treat multiple values as a do block" in {
     testCompileAs("1 2 3",
       Array(
-        Push(Number(1)),
+        Push(1),
         Pop,
-        Push(Number(2)),
+        Push(2),
         Pop,
-        Push(Number(3)),
+        Push(3),
       )
     )
   }
@@ -82,8 +82,8 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile +" in {
     testCompileAs("(+ 1 2)",
       Array(
-        Push(Number(1)),
-        Push(Number(2)),
+        Push(1),
+        Push(2),
         Op2(Add),
       )
     )
@@ -92,8 +92,8 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile >" in {
     testCompileAs("(> 1 2)",
       Array(
-        Push(Number(1)),
-        Push(Number(2)),
+        Push(1),
+        Push(2),
         Op2(GreaterThan),
       )
     )
@@ -102,7 +102,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile not" in {
     testCompileAs("(! true)",
       Array(
-        Push(Value.fromBool(true)),
+        Push(true),
         Op1(Not),
       )
     )
@@ -111,11 +111,11 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile a if expression of values" in {
     testCompileAs("(if true \"when true\" \"when false\")",
       Array(
-        /* 0 */ Push(Value.fromBool(true)),
+        /* 0 */ Push(true),
         /* 1 */ JumpIfNot(4),
-        /* 2 */ Push(String("when true")),
+        /* 2 */ Push("when true"),
         /* 3 */ Jump(5),
-        /* 4 */ Push(String("when false")),
+        /* 4 */ Push("when false"),
         /* 5 */
       )
     )
@@ -124,12 +124,12 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile a if expression of expressions" in {
     testCompileAs("(if (> 100 200) (+ 10 20) (! ()))",
       Array(
-        /* 00 */ Push(Number(100)),
-        /* 01 */ Push(Number(200)),
+        /* 00 */ Push(100),
+        /* 01 */ Push(200),
         /* 02 */ Op2(GreaterThan),
         /* 03 */ JumpIfNot(8),
-        /* 04 */ Push(Number(10)), // if branch
-        /* 05 */ Push(Number(20)),
+        /* 04 */ Push(10), // if branch
+        /* 05 */ Push(20),
         /* 06 */ Op2(Add),
         /* 07 */ Jump(10),
         /* 08 */ Push(List.of()), // else branch
@@ -141,11 +141,11 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "compile def expressions" in {
     testCompileAs("(def x 10) (def y 20) (+ x y)", Array(
-      Push(Number(10)),
+      Push(10),
       SetGlobal(0),
       Pop,
 
-      Push(Number(20)),
+      Push(20),
       SetGlobal(1),
       Pop,
 
@@ -158,11 +158,11 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   behavior of "quote special form"
   it should "be a noop with literals" in {
     testCompileAs("(quote 42)", Array(
-      Push(Number(42)),
+      Push(42),
     ))
 
     testCompileAs("(quote \"hello\")", Array(
-      Push(String("hello")),
+      Push("hello"),
     ))
 
     testCompileAs("(quote ())", Array(

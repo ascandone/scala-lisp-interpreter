@@ -11,13 +11,13 @@ object Add extends Op2Impl {
 
 object GreaterThan extends Op2Impl {
   override def apply(a: Value[OpCode], b: Value[OpCode]): Value[OpCode] = (a, b) match {
-    case (Number(na), Number(nb)) => Value.fromBool(na > nb)
+    case (Number(na), Number(nb)) => na > nb
     case _ => throw new Exception("GT error")
   }
 }
 
 object Not extends Op1Impl {
-  override def apply(a: Value[OpCode]): Value[OpCode] = Value.fromBool(!a.toBool)
+  override def apply(a: Value[OpCode]): Value[OpCode] = !a.toBool
 }
 
 object Cons extends Op2Impl {

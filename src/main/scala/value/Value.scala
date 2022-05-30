@@ -1,13 +1,21 @@
 package value
 
+import scala.language.implicitConversions
+
 
 object Value {
 
-  def fromBool[Op](boolean: Boolean): Value[Op] = if (boolean) {
+  implicit def fromBool[Op](boolean: Boolean): Value[Op] = if (boolean) {
     Symbol("true")
   } else {
     Symbol("false")
   }
+
+  implicit def fromNumber[Op](n: Float): Value[Op] = Number(n)
+
+  implicit def fromString[Op](s: java.lang.String): Value[Op] = String(s)
+
+  implicit def fromList[Op](l: scala.List[Value[Op]]): Value[Op] = List(l)
 
   def nil[Op]: Value[Op] = List()
 }
