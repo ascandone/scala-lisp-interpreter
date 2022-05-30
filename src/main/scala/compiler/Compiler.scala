@@ -94,8 +94,8 @@ class CompilerLoop(val symbolTable: SymbolTable) {
       }
 
       case f :: args =>
-        args.foreach {
-          compile
+        for (arg <- args) {
+          compile(arg)
         }
         compile(f)
         emitter.emit(Call(args.length))

@@ -110,21 +110,20 @@ class Vm {
           case Left(ArgumentsArity.TooManyArgs(extra)) => throw new Exception(s"Arity error (got $extra more)")
           case Right(parsedArgs) => {
 
-            parsedArgs.required foreach {
-              stack.push
+            for (arg <- parsedArgs.required) {
+              stack.push(arg)
             }
 
             val (optionalPassed, optionalsNotGiven) = parsedArgs.optionals
-            optionalPassed foreach {
-              stack.push
+
+            for (arg <- optionalPassed) {
+              stack.push(arg)
             }
 
-            (0 until optionalsNotGiven) foreach (_ => {
+            for (_ <- (0 until optionalsNotGiven)) {
               stack.push(Value.nil)
-            })
+            }
 
-
-            // TODO use foreach
             for (restArgs <- parsedArgs.rest) {
               stack.push(List(restArgs))
             }
