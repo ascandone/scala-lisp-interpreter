@@ -58,6 +58,7 @@ class CompilerLoop(val symbolTable: SymbolTable) {
       case Symbol("+") :: args => compileOp2(Add, args)
       case Symbol(">") :: args => compileOp2(GreaterThan, args)
       case Symbol("!") :: args => compileOp1(Not, args)
+      case Symbol("sleep") :: args => compileOp1(Sleep, args)
 
       case Symbol(Compiler.IF) :: args => args match {
         case scala.List(cond) => compileIf(cond)

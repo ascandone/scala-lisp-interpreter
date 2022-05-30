@@ -19,3 +19,13 @@ object GreaterThan extends Op2Impl {
 object Not extends Op1Impl {
   override def apply(a: Value[OpCode]): Value[OpCode] = Value.fromBool(!a.toBool)
 }
+
+object Sleep extends Op1Impl {
+  override def apply(ms: Value[OpCode]): Value[OpCode] = ms match {
+    case Number(nms) => {
+      Thread.sleep(nms.toLong)
+      Value.nil
+    }
+    case _ => throw new Exception("Invalid sleep args")
+  }
+}
