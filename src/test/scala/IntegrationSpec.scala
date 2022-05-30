@@ -264,7 +264,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)
 
-    val result = Vm.run(compiled)
+    val result = Vm.runOnce(compiled)
 
     val parsedExpected = Parser.run(expected).get.head
 

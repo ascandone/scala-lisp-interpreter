@@ -7,6 +7,7 @@ import scala.annotation.tailrec
 import scala.io.StdIn.readLine
 
 object Main {
+  private val vm = new Vm
 
   def main(args: Array[String]): Unit = {
     loop()
@@ -18,7 +19,7 @@ object Main {
     val line = readLine()
     val parsed = Parser.run(line).get
     val compiled = compiler.Compiler.compile(parsed)
-    val retValue = Vm.run(compiled)
+    val retValue = vm.run(compiled)
     println(retValue.show)
     loop()
   }
