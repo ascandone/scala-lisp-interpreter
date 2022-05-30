@@ -49,8 +49,14 @@ object List {
 
 case class CompiledFunction[Op](
                                  instructions: Array[Op],
-                                 argsNumber: Int = 0,
+                                 args: Arguments = Arguments(),
                                ) extends Value[Op]
+
+case class Arguments(
+                      required: Int = 0,
+                      rest: Boolean = false,
+                      optionals: Int = 0,
+                    )
 
 case class Closure[Op](
                         freeVariables: Array[Value[Op]],

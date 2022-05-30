@@ -103,8 +103,8 @@ class Vm {
           case _ => throw new Exception("Expected a function")
         }
 
-        if (closure.fn.argsNumber != passedArgs) {
-          throw new Exception(s"Arity error (expected ${closure.fn.argsNumber}, got $passedArgs)")
+        if (closure.fn.args.required != passedArgs) {
+          throw new Exception(s"Arity error (expected ${closure.fn.args.required}, got $passedArgs)")
         }
 
         val newFrame = new Frame(

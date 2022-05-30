@@ -100,7 +100,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "execute Op.Call with two args" in {
 
-    val fn = CompiledFunction[OpCode](argsNumber = 2, instructions = Array(
+    val fn = CompiledFunction[OpCode](args = Arguments(required = 2), instructions = Array(
       Push(Value.nil),
       GetLocal(0),
       GetLocal(1),
@@ -121,7 +121,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
   it should "execute PushClosure" in {
     // a => b => a + b
     val inner = CompiledFunction[OpCode](
-      argsNumber = 1,
+      args = Arguments(required = 1),
       instructions = Array(
         GetFree(0),
         GetLocal(0),
@@ -131,7 +131,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
     )
 
     val outer = CompiledFunction[OpCode](
-      argsNumber = 1,
+      args = Arguments(required = 1),
       instructions = Array(
         GetLocal(0),
         PushClosure(1, inner),
@@ -163,7 +163,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
     val LIM = 4
 
     val fn = CompiledFunction[OpCode](
-      argsNumber = 1,
+      args = Arguments(required = 1),
       instructions = Array(
         /* 00 */ GetLocal(0),
         /* 01 */ Push(Number(LIM.toFloat)),
@@ -191,6 +191,4 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
     Vm.runOnce(instructions) should be(Number((LIM + 1).toFloat))
   }
-
-
 }
