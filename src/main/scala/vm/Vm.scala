@@ -21,9 +21,6 @@ class Vm {
   }
 
   private class VmLoop(private var instructions: Array[OpCode]) {
-    // TODO this should be outside
-    // TODO this should be an array
-    // private val globals = mutable.HashMap[Int, Value[OpCode]]()
     private val stack = new ArrayStack[Value[OpCode]]()
     private val frames = {
       val stack = new ArrayStack[Frame]()
