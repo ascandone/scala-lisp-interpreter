@@ -3,6 +3,8 @@ package compiler
 import value._
 import vm._
 
+import scala.collection.mutable
+
 object Compiler {
   val DO = "do"
   val TRUE = "true"
@@ -11,6 +13,7 @@ object Compiler {
   val DEF = "def"
   val LAMBDA = "lambda"
   val QUOTE = "quote"
+  val DEF_MACRO = "defmacro"
 
   def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
     val compiler = new Compiler()
@@ -18,8 +21,9 @@ object Compiler {
   }
 }
 
-class Compiler {
+class Compiler(vm: Vm = new Vm) {
   private val symbolTable = new SymbolTable()
+  private val macros = new mutable.HashMap[java.lang.String, Unit]()
 
   def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
     val block = List[Nothing](
@@ -75,6 +79,11 @@ class CompilerLoop(val symbolTable: SymbolTable) {
         }
 
         case _ => throw new Exception("Invalid `def` arguments")
+      }
+
+      case Symbol(Compiler.DEF_MACRO) :: args => args match {
+        case Symbol(name) :: lam => ???
+        case _ => throw new Exception("Invalid `defmacro` arguments")
       }
 
       case Symbol(Compiler.LAMBDA) :: args => args match {
