@@ -17,7 +17,7 @@ class ValueSpec extends AnyFlatSpec with should.Matchers {
 }
 
 class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
-  it should "parse required arguments" in {
+  it should "parse (ƒ a .. b) forms" in {
     ArgumentsArity() parse scala.List() should be(
       Right(ArgumentsArity.ParsedArguments())
     )
@@ -29,7 +29,7 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     )
   }
 
-  it should "parse rest arguments" in {
+  it should "parse (ƒ &rest a .. b) forms" in {
     ArgumentsArity(rest = true) parse Nil should be(
       Right(ArgumentsArity.ParsedArguments(rest = Some(Nil)))
     )
@@ -39,7 +39,7 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     )
   }
 
-  it should "parse rest arguments and required arguments used together" in {
+  it should "parse (ƒ a .. b &rest c .. d) forms" in {
     ArgumentsArity(rest = true, required = 1) parse scala.List("a") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
@@ -55,7 +55,7 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     )
   }
 
-  it should "report the right errors in required arguments" in {
+  it should "report when arguments are missing" in {
     ArgumentsArity(required = 2) parse Nil should be(
       Left(ArgumentsArity.RequiredArgsMissing(got = 0, expected = 2))
     )
@@ -63,7 +63,9 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     ArgumentsArity(required = 2, rest = true) parse scala.List("a") should be(
       Left(ArgumentsArity.RequiredArgsMissing(got = 1, expected = 2))
     )
+  }
 
+  it should "report when there are too many args" in {
     ArgumentsArity() parse scala.List("a", "b") should be(
       Left(ArgumentsArity.TooManyArgs(extra = 2))
     )
