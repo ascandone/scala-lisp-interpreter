@@ -49,16 +49,74 @@ object List {
 
 case class CompiledFunction[Op](
                                  instructions: Array[Op],
-                                 args: Arguments = Arguments(),
+                                 arity: ArgumentsArity = ArgumentsArity(),
                                ) extends Value[Op]
-
-case class Arguments(
-                      required: Int = 0,
-                      rest: Boolean = false,
-                      optionals: Int = 0,
-                    )
 
 case class Closure[Op](
                         freeVariables: Array[Value[Op]],
                         fn: CompiledFunction[Op],
                       ) extends Value[Op]
+
+case class ArgumentsArity(
+                           required: Int = 0,
+                           rest: Boolean = false,
+                           optionals: Int = 0,
+                         ) {
+
+  def size: Int = required + optionals + (if (rest) 1 else 0)
+
+  def parse[Value](args: scala.List[Value]): Either[ArgumentsArity.ParsingReason, ArgumentsArity.ParsedArguments[Value]] = {
+    parseRequiredArgs(args).flatMap(res => {
+      val (requiredArgs, afterRequired) = res
+
+      // TODO optionals
+      val (optionals, afterOptionals) = ((Nil, 0), afterRequired)
+
+      parseRest(afterOptionals).map(rest => {
+        ArgumentsArity.ParsedArguments(
+          required = requiredArgs,
+          optionals = optionals,
+          rest = rest,
+        )
+      })
+    })
+  }
+
+
+  private def parseRequiredArgs[Value](args: scala.List[Value]):
+  Either[ArgumentsArity.ParsingReason, (scala.List[Value], scala.List[Value])] =
+  // TODO do in one pass
+    if (required > args.size) {
+      Left(ArgumentsArity.RequiredArgsMissing(
+        expected = required,
+        got = args.size
+      ))
+    } else {
+      Right(args.splitAt(required))
+    }
+
+  private def parseRest[Value](afterOptionals: scala.List[Value]) =
+    if (rest) {
+      // There cannot be `TooManyArgs` with rest args
+      Right(Some(afterOptionals))
+    } else {
+      afterOptionals match {
+        case Nil => Right(None)
+        case _ => Left(ArgumentsArity.TooManyArgs(extra = afterOptionals.length))
+      }
+    }
+}
+
+object ArgumentsArity {
+  sealed trait ParsingReason
+
+  case class ParsedArguments[Value](
+                                     required: scala.List[Value] = scala.List(),
+                                     optionals: (scala.List[Value], Int) = (scala.List(), 0),
+                                     rest: Option[scala.List[Value]] = None,
+                                   )
+
+  case class RequiredArgsMissing(expected: Int, got: Int) extends ParsingReason
+
+  case class TooManyArgs(extra: Int) extends ParsingReason
+}

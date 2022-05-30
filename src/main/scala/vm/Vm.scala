@@ -89,8 +89,7 @@ class Vm {
         case Some(value) => stack.push(value)
       }
 
-
-      case Call(passedArgs) =>
+      case Call(argsGivenNumber) =>
         val value = stack.pop()
         val closure: Closure[OpCode] = value match {
           case fn@CompiledFunction(_, _) => Closure(
@@ -103,16 +102,30 @@ class Vm {
           case _ => throw new Exception("Expected a function")
         }
 
-        if (closure.fn.args.required != passedArgs) {
-          throw new Exception(s"Arity error (expected ${closure.fn.args.required}, got $passedArgs)")
+        val givenArgs = (0 until argsGivenNumber).map(_ => stack.pop()).reverse.toList
+
+        closure.fn.arity parse givenArgs match {
+          // TODO better error
+          case Left(ArgumentsArity.RequiredArgsMissing(expected, got)) => throw new Exception(s"Arity error (expected at least $expected, got $got)")
+          case Left(ArgumentsArity.TooManyArgs(extra)) => throw new Exception(s"Arity error (got $extra more)")
+          case Right(parsedArgs) => {
+
+            parsedArgs.required foreach {
+              stack.push
+            }
+
+            // TODO opt
+
+            for (restArgs <- parsedArgs.rest) {
+              stack.push(List(restArgs))
+            }
+
+            frames.push(new Frame(
+              closure = closure,
+              basePointer = stack.length() - closure.fn.arity.size
+            ))
+          }
         }
-
-        val newFrame = new Frame(
-          closure = closure,
-          basePointer = stack.length() - passedArgs
-        )
-
-        frames.push(newFrame)
 
       case Return =>
         val retValue = stack.pop()

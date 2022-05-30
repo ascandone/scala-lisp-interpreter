@@ -114,7 +114,7 @@ class CompilerLoop(val symbolTable: SymbolTable) {
 
     val fn = CompiledFunction(
       instructions = instructions,
-      args = Arguments(
+      arity = ArgumentsArity(
         required = params.length
       )
     )
