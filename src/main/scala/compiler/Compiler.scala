@@ -13,21 +13,27 @@ object Compiler {
   val QUOTE = "quote"
 
   def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
-    val block = List[Nothing](
-      Symbol(DO) :: values
-    )
-
     val compiler = new Compiler()
-
-    compiler.compile(block)
-
-    compiler.collect()
+    compiler.compile(values)
   }
 }
 
 class Compiler {
+  private val symbolTable = new SymbolTable()
+
+  def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
+    val block = List[Nothing](
+      Symbol(Compiler.DO) :: values
+    )
+
+    val compiler = new CompilerLoop(symbolTable)
+    compiler.compile(block)
+    compiler.collect()
+  }
+}
+
+class CompilerLoop(val symbolTable: SymbolTable) {
   private val emitter = new Emitter()
-  private var symbolTable = new SymbolTable()
 
   def collect(): Array[OpCode] = emitter.collect
 
@@ -96,8 +102,7 @@ class Compiler {
   }
 
   private def compileLambda(params: scala.List[java.lang.String], body: Value[Nothing] = List.of()): Unit = {
-    val compiler = new Compiler()
-    compiler.symbolTable = this.symbolTable.nested
+    val compiler = new CompilerLoop(this.symbolTable.nested)
     for (param <- params) {
       compiler.symbolTable.define(param)
     }
