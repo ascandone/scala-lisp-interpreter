@@ -1,8 +1,7 @@
-import compiler.Compiler
+import interpreter.Interpreter
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 import value.parser.Parser
-import vm.Vm
 
 class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
@@ -285,11 +284,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
 
   def expectVmToEvalAs(str: java.lang.String, expected: java.lang.String): Unit = {
-    val parsed = Parser.run(str).get
-    val compiled = Compiler.compile(parsed)
-
-    val result = Vm.runOnce(compiled)
-
+    val result = Interpreter.parseRun(str)
     val parsedExpected = Parser.run(expected).get.head
 
     result should be(parsedExpected)
