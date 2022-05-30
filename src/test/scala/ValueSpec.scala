@@ -149,5 +149,13 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
     ArgumentsArity() parse scala.List("a", "b") should be(
       Left(ArgumentsArity.TooManyArgs(extra = 2))
     )
+
+    ArgumentsArity(optionals = 1) parse scala.List("a", "b") should be(
+      Left(ArgumentsArity.TooManyArgs(extra = 1))
+    )
+
+    ArgumentsArity(required = 1, optionals = 1) parse scala.List("a", "b", "c", "d") should be(
+      Left(ArgumentsArity.TooManyArgs(extra = 2))
+    )
   }
 }
