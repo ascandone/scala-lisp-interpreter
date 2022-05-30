@@ -218,4 +218,23 @@ class ArgsCompilerSpec extends AnyFlatSpec with should.Matchers {
       optionals = scala.List("a", "b")
     ))
   }
+
+  it should "compile rest args" in {
+    CompiledArgs("&rest", "a") should be(new CompiledArgs(rest = Some("a")))
+  }
+
+  it should "compile regular args mixed with rest" in {
+    CompiledArgs("x", "y", "&rest", "a") should be(new CompiledArgs(
+      required = scala.List("x", "y"),
+      rest = Some("a"),
+    ))
+  }
+
+  it should "compile regular args mixed with optional and rest" in {
+    CompiledArgs("x", "y", "&opt", "o1", "o2", "&rest", "a") should be(new CompiledArgs(
+      required = scala.List("x", "y"),
+      optionals = scala.List("o1", "o2"),
+      rest = Some("a"),
+    ))
+  }
 }

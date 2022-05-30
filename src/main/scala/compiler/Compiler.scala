@@ -206,18 +206,28 @@ private object CompiledArgs {
     args match {
       case Nil => new CompiledArgs()
       case OPTIONAL :: opts => compileOpt(opts)
+      case REST :: args1 => compileRest(args1)
       case arg :: tl =>
         val rc = compile(tl)
         rc.copy(required = arg :: rc.required)
     }
 
-  def compileOpt(args: scala.List[java.lang.String]): CompiledArgs =
+  private def compileOpt(args: scala.List[java.lang.String]): CompiledArgs =
     args match {
       case Nil => new CompiledArgs()
+      case OPTIONAL :: _ => throw new Exception("duplicate &opt is not allowed")
+      case REST :: args1 => compileRest(args1)
       case arg :: tl =>
         val rc = compileOpt(tl)
         rc.copy(optionals = arg :: rc.optionals)
     }
+
+  private def compileRest(args: scala.List[java.lang.String]): CompiledArgs =
+    args match {
+      case Nil => throw new Exception("no labels after &rest")
+      case OPTIONAL :: _ => throw new Exception("duplicate &opt is not allowed")
+      case REST :: _ => throw new Exception("duplicate &rest is not allowed")
+      case arg :: Nil => new CompiledArgs(rest = Some(arg))
+      case _ :: _ :: _ => throw new Exception("only one argument after &rest is allowed")
+    }
 }
-
-
