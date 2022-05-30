@@ -17,11 +17,13 @@ class ValueSpec extends AnyFlatSpec with should.Matchers {
 }
 
 class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
-  it should "parse (ƒ a .. b) forms" in {
+  it should "parse (ƒ) forms" in {
     ArgumentsArity() parse scala.List() should be(
       Right(ArgumentsArity.ParsedArguments())
     )
+  }
 
+  it should "parse (ƒ a .. b) forms" in {
     ArgumentsArity(required = 2) parse scala.List("a", "b") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a", "b"),
@@ -30,27 +32,105 @@ class ArgumentsSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "parse (ƒ &rest a .. b) forms" in {
-    ArgumentsArity(rest = true) parse Nil should be(
+    val arity = ArgumentsArity(rest = true)
+    arity parse Nil should be(
       Right(ArgumentsArity.ParsedArguments(rest = Some(Nil)))
     )
 
-    ArgumentsArity(rest = true) parse scala.List("a", "b") should be(
+    arity parse scala.List("a", "b") should be(
       Right(ArgumentsArity.ParsedArguments(rest = Some(scala.List("a", "b"))))
     )
   }
 
   it should "parse (ƒ a .. b &rest c .. d) forms" in {
-    ArgumentsArity(rest = true, required = 1) parse scala.List("a") should be(
+    val arity = ArgumentsArity(rest = true, required = 1)
+    arity parse scala.List("a") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
         rest = Some(Nil),
       ))
     )
 
-    ArgumentsArity(rest = true, required = 1) parse scala.List("a", "b", "c") should be(
+    arity parse scala.List("a", "b", "c") should be(
       Right(ArgumentsArity.ParsedArguments(
         required = scala.List("a"),
         rest = Some(scala.List("b", "c")),
+      ))
+    )
+  }
+
+  it should "parse (ƒ &opt a .. b) forms" in {
+    val arity = ArgumentsArity(optionals = 2)
+
+    arity parse scala.List() should be(
+      Right(ArgumentsArity.ParsedArguments(
+        optionals = (Nil, 2)
+      ))
+    )
+
+    arity parse scala.List("a") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        optionals = (scala.List("a"), 1)
+      ))
+    )
+
+    arity parse scala.List("a", "b") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        optionals = (scala.List("a", "b"), 0)
+      ))
+    )
+  }
+
+  it should "parse (ƒ a .. b &opt c .. d)" in {
+    val arity = ArgumentsArity(required = 1, optionals = 1)
+
+    arity parse scala.List("a") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        required = scala.List("a"),
+        optionals = (Nil, 0)
+      ))
+    )
+
+    arity parse scala.List("a", "b") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        required = scala.List("a"),
+        optionals = (Nil, 0)
+      ))
+    )
+  }
+
+  it should "parse (ƒ a .. b &opt c .. d &rest e .. f)" in {
+    val arity = ArgumentsArity(required = 1, optionals = 1, rest = true)
+
+    arity parse scala.List("a") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        required = scala.List("a"),
+        optionals = (Nil, 1),
+        rest = Some(Nil)
+      ))
+    )
+
+    arity parse scala.List("a", "b") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        required = scala.List("a"),
+        optionals = (scala.List("a"), 0),
+        rest = Some(Nil)
+      ))
+    )
+
+    arity parse scala.List("a", "b", "c") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        required = scala.List("a"),
+        optionals = (scala.List("a"), 0),
+        rest = Some(scala.List("c"))
+      ))
+    )
+
+    arity parse scala.List("a", "b", "c", "d") should be(
+      Right(ArgumentsArity.ParsedArguments(
+        required = scala.List("a"),
+        optionals = (scala.List("a"), 0),
+        rest = Some(scala.List("c", "d"))
       ))
     )
   }
