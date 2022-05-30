@@ -20,6 +20,13 @@ object Not extends Op1Impl {
   override def apply(a: Value[OpCode]): Value[OpCode] = Value.fromBool(!a.toBool)
 }
 
+object Cons extends Op2Impl {
+  override def apply(head: Value[OpCode], tail: Value[OpCode]): Value[OpCode] = tail match {
+    case List(tail_) => List(head :: tail_)
+    case _ => throw new Exception("Cons tail should be a list")
+  }
+}
+
 object Sleep extends Op1Impl {
   override def apply(ms: Value[OpCode]): Value[OpCode] = ms match {
     case Number(nms) => {

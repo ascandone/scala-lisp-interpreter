@@ -114,8 +114,17 @@ class Vm {
               stack.push
             }
 
-            // TODO opt
+            val (optionalPassed, optionalsNotGiven) = parsedArgs.optionals
+            optionalPassed foreach {
+              stack.push
+            }
 
+            (0 until optionalsNotGiven) foreach (_ => {
+              stack.push(Value.nil)
+            })
+
+
+            // TODO use foreach
             for (restArgs <- parsedArgs.rest) {
               stack.push(List(restArgs))
             }

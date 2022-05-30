@@ -194,11 +194,12 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "handle rest params" in {
     // ((lambda (&rest xs) xs) 0 1 2)
-    val fn = CompiledFunction[OpCode](arity = ArgumentsArity(rest = true), instructions = Array(
-      Push(Value.nil),
-      GetLocal(0),
-      Return,
-    ))
+    val fn = CompiledFunction[OpCode](
+      arity = ArgumentsArity(rest = true),
+      instructions = Array(
+        GetLocal(0),
+        Return,
+      ))
 
     val instructions = Array[OpCode](
       Push(Number(0)),
@@ -212,6 +213,28 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Number(0),
       Number(1),
       Number(2),
+    ))
+  }
+
+  it should "handle optional params" in {
+    // ((lambda (&opt a b) (cons a b)) 0)
+    val fn = CompiledFunction[OpCode](
+      arity = ArgumentsArity(optionals = 2),
+      instructions = Array(
+        GetLocal(0),
+        GetLocal(1),
+        Op2(Cons),
+        Return,
+      ))
+
+    val instructions = Array[OpCode](
+      Push(Number(0)),
+      Push(fn),
+      Call(1),
+    )
+
+    Vm.runOnce(instructions) should be(List.of(
+      Number(0),
     ))
   }
 }
