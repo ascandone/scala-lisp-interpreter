@@ -190,3 +190,34 @@ class CompilerLoop(val symbolTable: SymbolTable) {
   }
 }
 
+private case class CompiledArgs(
+                                 required: scala.List[java.lang.String] = Nil,
+                                 optionals: scala.List[java.lang.String] = Nil,
+                                 rest: Option[java.lang.String] = None,
+                               )
+
+private object CompiledArgs {
+  val OPTIONAL = "&opt"
+  val REST = "&rest"
+
+  def apply(args: java.lang.String*): CompiledArgs = compile(args.toList)
+
+  def compile(args: scala.List[java.lang.String]): CompiledArgs =
+    args match {
+      case Nil => new CompiledArgs()
+      case OPTIONAL :: opts => compileOpt(opts)
+      case arg :: tl =>
+        val rc = compile(tl)
+        rc.copy(required = arg :: rc.required)
+    }
+
+  def compileOpt(args: scala.List[java.lang.String]): CompiledArgs =
+    args match {
+      case Nil => new CompiledArgs()
+      case arg :: tl =>
+        val rc = compileOpt(tl)
+        rc.copy(optionals = arg :: rc.optionals)
+    }
+}
+
+

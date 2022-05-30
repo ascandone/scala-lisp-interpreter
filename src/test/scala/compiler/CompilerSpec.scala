@@ -1,4 +1,5 @@
-import compiler._
+package compiler
+
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 import value._
@@ -186,5 +187,19 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)
     compiled should be(instructions)
+  }
+}
+
+class ArgsCompilerSpec extends AnyFlatSpec with should.Matchers {
+  it should "compile regular args" in {
+    CompiledArgs() should be(new CompiledArgs())
+    CompiledArgs("a") should be(new CompiledArgs(required = scala.List("a")))
+    CompiledArgs("a", "b") should be(new CompiledArgs(required = scala.List("a", "b")))
+  }
+
+  it should "compile optional args" in {
+    CompiledArgs("&opt") should be(new CompiledArgs(optionals = Nil))
+    CompiledArgs("&opt", "a") should be(new CompiledArgs(optionals = scala.List("a")))
+    CompiledArgs("&opt", "a", "b") should be(new CompiledArgs(optionals = scala.List("a", "b")))
   }
 }
