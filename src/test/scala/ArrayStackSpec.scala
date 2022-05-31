@@ -1,6 +1,6 @@
-import collection.mutable.ArrayStack
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
+import vm.mutable.ArrayStack
 
 class ArrayStackSpec extends AnyFlatSpec with should.Matchers {
 

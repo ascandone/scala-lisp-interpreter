@@ -11,7 +11,7 @@ object Compiler {
   val FALSE = "false"
   val IF = "if"
   val DEF = "def"
-  val LAMBDA = "lambda"
+  val LAMBDA = "lambda*"
   val QUOTE = "quote"
   val DEF_MACRO = "defmacro"
 

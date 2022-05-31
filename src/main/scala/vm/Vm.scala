@@ -1,7 +1,7 @@
 package vm
 
-import collection.mutable.ArrayStack
 import value._
+import vm.mutable.ArrayStack
 
 import scala.collection.mutable
 
