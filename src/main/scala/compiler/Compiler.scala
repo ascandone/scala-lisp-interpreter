@@ -15,7 +15,7 @@ object Compiler {
   val QUOTE = "quote"
   val DEF_MACRO = "defmacro"
 
-  def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
+  def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
     val compiler = new Compiler()
     compiler.compile(values)
   }
@@ -25,8 +25,8 @@ class Compiler(vm: Vm = new Vm) {
   private val symbolTable = new SymbolTable()
   private val macros = new mutable.HashMap[java.lang.String, CompiledFunction[OpCode]]()
 
-  def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
-    val block = List[Nothing](
+  def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
+    val block = List[OpCode](
       Symbol(Compiler.DO) :: values
     )
 
@@ -40,7 +40,7 @@ class Compiler(vm: Vm = new Vm) {
 
     def collect(): Array[OpCode] = emitter.collect
 
-    def compile(value: Value[Nothing]): Unit = value match {
+    def compile(value: Value[OpCode]): Unit = value match {
       case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | CompiledFunction(_, _) | Closure(_, _) =>
         emitter.emit(Push(value))
 
@@ -100,16 +100,17 @@ class Compiler(vm: Vm = new Vm) {
     }
 
 
-    private def compileApplication(f: Value[Nothing], args: scala.List[Value[Nothing]]): Unit =
+    private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit =
       lookupMacro(f) match {
         // TODO arity
         case Some(macroFunction) => {
-          val result = vm.run(Array(
+          val instructions = Array[OpCode](
             Push(macroFunction),
             Call(0),
-          ))
+          )
 
-          emitter.emit(Push(result))
+          val result = vm.run(instructions)
+          compile(result)
         }
 
         case None =>
@@ -120,7 +121,7 @@ class Compiler(vm: Vm = new Vm) {
           emitter.emit(Call(args.length))
       }
 
-    private def compileLambda(params: scala.List[Value[Nothing]], body: Value[Nothing] = List.of()): Unit = {
+    private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode] = List.of()): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
 
@@ -143,25 +144,25 @@ class Compiler(vm: Vm = new Vm) {
       }
     }
 
-    private def compileMacro(name: java.lang.String, params: scala.List[Value[Nothing]], body: Value[Nothing] = List.of()): Unit = {
+    private def compileMacro(name: java.lang.String, params: scala.List[Value[OpCode]], body: Value[OpCode] = List.of()): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
       macros.put(name, fn)
       emitter.emit(Push(Nil))
     }
 
-    private def lookupMacro(value: Value[Nothing]): Option[CompiledFunction[OpCode]] = value match {
+    private def lookupMacro(value: Value[OpCode]): Option[CompiledFunction[OpCode]] = value match {
       case Symbol(name) => macros get name
       case _ => None
     }
 
-    private def compileDef(name: java.lang.String, value: Value[Nothing] = List.of()): Unit = {
+    private def compileDef(name: java.lang.String, value: Value[OpCode] = List.of()): Unit = {
       val symbol = symbolTable.define(name, forceGlobal = true)
       compile(value)
       emitter.emit(SetGlobal(symbol.index))
     }
 
-    private def compileBlock(block: scala.List[Value[Nothing]]): Unit = block match {
+    private def compileBlock(block: scala.List[Value[OpCode]]): Unit = block match {
       case Nil => emitter.emit(Push(Value.nil))
       case value :: Nil => compile(value)
       case _ => for ((value, index) <- block.zipWithIndex) {
@@ -174,9 +175,9 @@ class Compiler(vm: Vm = new Vm) {
     }
 
     private def compileIf(
-                           cond: Value[Nothing],
-                           branchTrue: Value[Nothing] = Value.nil,
-                           branchFalse: Value[Nothing] = Value.nil
+                           cond: Value[OpCode],
+                           branchTrue: Value[OpCode] = Value.nil,
+                           branchFalse: Value[OpCode] = Value.nil
                          ): Unit = {
       compile(cond)
       val beginBranchTrue = emitter.placeholder()
@@ -188,7 +189,7 @@ class Compiler(vm: Vm = new Vm) {
       beginBranchFalse.fill(Jump)
     }
 
-    private def compileOp1(op: Op1Impl, args: scala.List[Value[Nothing]]): Unit = args match {
+    private def compileOp1(op: Op1Impl, args: scala.List[Value[OpCode]]): Unit = args match {
       case scala.List(x) =>
         compile(x)
         emitter.emit(Op1(op))
@@ -196,7 +197,7 @@ class Compiler(vm: Vm = new Vm) {
       case _ => throw new Exception(s"Invalid arity (expected 1, got $args)")
     }
 
-    private def compileOp2(op: Op2Impl, args: scala.List[Value[Nothing]]): Unit = args match {
+    private def compileOp2(op: Op2Impl, args: scala.List[Value[OpCode]]): Unit = args match {
       case scala.List(x, y) =>
         compile(x)
         compile(y)
@@ -210,7 +211,7 @@ class Compiler(vm: Vm = new Vm) {
     private def compileLambda(
                                symbolTable: SymbolTable,
                                params: scala.List[Value[OpCode]],
-                               body: Value[Nothing] = List.of()
+                               body: Value[OpCode] = List.of()
                              ): CompiledFunction[OpCode] = {
       val compiler = new CompilerLoop(symbolTable)
 

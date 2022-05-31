@@ -198,6 +198,19 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     ))
   }
 
+  they should "be expanded when returning expressions" in {
+    testCompileAs("(def x 42) (defmacro mac () (quote x)) (mac)", Array(
+      Push(42),
+      SetGlobal(0),
+      Pop,
+
+      Push(Nil),
+      Pop,
+
+      GetGlobal(0),
+    ))
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)
