@@ -17,6 +17,17 @@ class ParserSpec extends AnyFlatSpec with should.Matchers {
     Parser.run("\"abc\"").get.head should be(String("abc"))
   }
 
+  it should "parse whitespace and comments" in {
+    Parser.run(
+      """
+            a ; comment
+            b
+        """
+    ).get should be(scala.List(
+      Symbol("a"), Symbol("b")
+    ))
+  }
+
   it should "parse the empty list" in {
     Parser.run("()").get.head should be(List())
   }

@@ -2,9 +2,12 @@ package value.parser
 
 import value._
 
+import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
 object Parser extends RegexParsers {
+  override protected val whiteSpace: Regex = """(\s|;.*)+""".r
+
   def unsafeRun(input: CharSequence): scala.List[Value[Nothing]] = run(input) match {
     case Success(result, _) => result
     case NoSuccess(msg, _) => throw new Exception(msg)
