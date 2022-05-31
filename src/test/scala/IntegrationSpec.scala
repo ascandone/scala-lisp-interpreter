@@ -293,7 +293,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   }
 
   they should "be expanded when returning expressions" in {
-    expectVmToEvalAs("(def x 42) (defmacro mac () (quote x)) (mac)", 42)
+    expectVmToEvalAs("(def x 42) (defmacro mac () 'x) (mac)", 42)
   }
 
   they should "have access to arguments" in {
@@ -311,7 +311,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs(
       """
         (defmacro prevent-crash (x)
-          (cons (quote quote)
+          (cons 'quote
             (cons (first x)
               ())))
 
