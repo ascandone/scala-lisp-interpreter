@@ -31,8 +31,6 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("(intrinsic/not (intrinsic/greater-than (intrinsic/add 100 1) 100))", false)
   }
 
-  // TODO should reify native operations
-
   behavior of "def expression"
   it should "bind value to globals" in {
     expectVmToEvalAs("(def x 42) x", 42)
