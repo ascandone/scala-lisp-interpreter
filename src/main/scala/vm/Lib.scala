@@ -71,3 +71,10 @@ object Sleep extends Op1Impl {
     case _ => throw new Exception("Invalid sleep args")
   }
 }
+
+object Log extends Op1Impl {
+  override def apply(x: Value[OpCode]): Value[OpCode] = {
+    println(x.show)
+    Value.nil
+  }
+}

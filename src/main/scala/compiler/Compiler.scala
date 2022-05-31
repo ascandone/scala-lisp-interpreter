@@ -19,19 +19,6 @@ object Compiler {
     val compiler = new Compiler()
     compiler.compile(values)
   }
-  /*
-
-    def lib(name: java.lang.String, args: scala.List[Value[OpCode]]) = name match {
-      case "+" => compileOp2(Add, args)
-      case ">" => compileOp2(GreaterThan, args)
-      case "!" => compileOp1(Not, args)
-      case "cons" => compileOp2(Cons, args)
-      case "first" => compileOp1(First, args)
-      case "rest" => compileOp1(Rest, args)
-      case "nil?" => compileOp1(IsNil, args)
-      case "sleep" => compileOp1(Sleep, args)
-    }
-   */
 }
 
 class Compiler(vm: Vm = new Vm) {
@@ -104,6 +91,7 @@ class Compiler(vm: Vm = new Vm) {
         }
 
         case Symbol("intrinsic/add") :: args => compileOp2(Add, args)
+        case Symbol("intrinsic/log") :: args => compileOp1(Log, args)
         case Symbol("intrinsic/greater-than") :: args => compileOp2(GreaterThan, args)
         case Symbol("intrinsic/not") :: args => compileOp1(Not, args)
         case Symbol("intrinsic/cons") :: args => compileOp2(Cons, args)

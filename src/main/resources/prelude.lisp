@@ -33,6 +33,9 @@
 (defun sleep (a)
   (intrinsic/sleep a))
 
+(defun log (a)
+  (intrinsic/log a))
+
 (defun eq? (a b)
   (intrinsic/is-eq a b))
 
