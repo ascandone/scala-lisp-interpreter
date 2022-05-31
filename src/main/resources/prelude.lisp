@@ -78,3 +78,7 @@
       (second body)
       (cons 'concat (map body backquote-helper)))
     (list 'quote body)))
+
+(defmacro let1 (binding body)
+    `((lambda (,(first binding)) ,body)
+        ,(second binding)))

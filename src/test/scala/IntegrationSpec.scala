@@ -374,6 +374,12 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("(def x (list 2 3)) `(1 ,@x 4 5)", List.of(1, 2, 3, 4, 5))
   }
 
+  behavior of "macros"
+  it should "have a let1 macro" in {
+    expectVmToEvalAs("(let1 (x (+ 10 20)) (+ 100 x))", 10 + 20 + 100)
+  }
+
+
   def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
     val result = Interpreter.parseRun(str, loadPrelude = true)
     result should be(expected)
