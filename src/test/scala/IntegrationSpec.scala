@@ -283,6 +283,44 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("((lambda (x &opt o &rest r) r) 0 1 2 3)", List.of(2, 3))
   }
 
+  behavior of "macros"
+  they should "be evaluated as nil when defined" in {
+    expectVmToEvalAs("(defmacro mac () ())", Nil)
+  }
+
+  they should "be expanded when returning literals" in {
+    expectVmToEvalAs("(defmacro mac () 42) (mac)", 42)
+  }
+
+  they should "be expanded when returning expressions" in {
+    expectVmToEvalAs("(def x 42) (defmacro mac () (quote x)) (mac)", 42)
+  }
+
+  they should "have access to arguments" in {
+    expectVmToEvalAs("(defmacro mac (x y) x) (mac 42 1)", 42)
+  }
+
+  they should "have access to unevaluated version of arguments" in {
+    expectVmToEvalAs(
+      "(def x 42) (defmacro prevent-crash (x) (first x)) (prevent-crash (x \"this should crash\"))",
+      42,
+    )
+  }
+
+  they should "have be able to return quoted version of args" in {
+    expectVmToEvalAs(
+      """
+        (defmacro prevent-crash (x)
+          (cons (quote quote)
+            (cons (first x)
+              ())))
+
+        (prevent-crash (+ "this should crash"))
+       """,
+      Symbol("+")
+    )
+  }
+
 
   def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
     val result = Interpreter.parseRun(str)
