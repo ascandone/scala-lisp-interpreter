@@ -10,8 +10,7 @@ import scala.io.Source
 object Interpreter {
   private lazy val preludeContent = {
     val res = Source.fromResource(PRELUDE_PATH)
-    val value = Parser.run(res.mkString(""))
-    value.get
+    Parser.unsafeRun(res.mkString(""))
   }
 
   private val PRELUDE_PATH = "prelude.lisp"
@@ -35,7 +34,7 @@ class Interpreter {
   }
 
   def parseEval(src: java.lang.String): Value[OpCode] = {
-    val values = Parser.run(src).get
+    val values = Parser.unsafeRun(src)
     eval(values)
   }
 

@@ -5,6 +5,12 @@ import value._
 import scala.util.parsing.combinator.RegexParsers
 
 object Parser extends RegexParsers {
+  def unsafeRun(input: CharSequence): scala.List[Value[Nothing]] = run(input) match {
+    case Success(result, _) => result
+    case NoSuccess(msg, _) => throw new Exception(msg)
+    case _ => ???
+  }
+
   def run(input: CharSequence): ParseResult[scala.List[Value[Nothing]]] = parseAll(program, input)
 
   def program: Parser[scala.List[Value[Nothing]]] = rep(value)
