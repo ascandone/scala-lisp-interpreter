@@ -61,6 +61,8 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("+") :: args => compileOp2(Add, args)
         case Symbol(">") :: args => compileOp2(GreaterThan, args)
         case Symbol("!") :: args => compileOp1(Not, args)
+        case Symbol("cons") :: args => compileOp2(Cons, args)
+        case Symbol("first") :: args => compileOp1(First, args)
         case Symbol("sleep") :: args => compileOp1(Sleep, args)
 
         case Symbol(Compiler.IF) :: args => args match {

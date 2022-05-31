@@ -27,6 +27,14 @@ object Cons extends Op2Impl {
   }
 }
 
+object First extends Op1Impl {
+  override def apply(lst: Value[OpCode]): Value[OpCode] = lst match {
+    case List(Nil) => Nil
+    case List(hd :: _) => hd
+    case _ => throw new Exception("`first` argument should be a list")
+  }
+}
+
 object Sleep extends Op1Impl {
   override def apply(ms: Value[OpCode]): Value[OpCode] = ms match {
     case Number(nms) => {

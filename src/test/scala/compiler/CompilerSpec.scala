@@ -220,6 +220,47 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     ))
   }
 
+  they should "prevent arguments to evaluate" in {
+    testCompileAs("(defmacro prevent-crash (x) ()) (prevent-crash (+ \"this should crash\"))", Array(
+      Push(Nil),
+      Pop,
+
+      Push(Nil),
+    ))
+  }
+
+  they should "have access to unevaluated version of arguments" in {
+    testCompileAs("(def x 42) (defmacro prevent-crash (x) (first x)) (prevent-crash (x \"this should crash\"))", Array(
+      Push(42),
+      SetGlobal(0),
+      Pop,
+
+      Push(Nil),
+      Pop,
+
+      GetGlobal(0),
+    ))
+  }
+
+  they should "have be able to return quoted version of args" in {
+    testCompileAs(
+      """
+        (defmacro prevent-crash (x)
+          (cons (quote quote)
+            (cons (first x)
+              ())))
+
+        (prevent-crash (+ "this should crash"))
+       """,
+      Array(
+        Push(Nil),
+        Pop,
+
+        Push(Symbol("+")),
+      )
+    )
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)
