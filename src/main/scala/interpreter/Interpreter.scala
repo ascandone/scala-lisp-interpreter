@@ -10,16 +10,16 @@ object Interpreter {
 }
 
 class Interpreter {
-  private val compiler = new Compiler()
   private val vm = new Vm
+  private val compiler = new Compiler(vm)
 
   def parseEval(src: java.lang.String): Value[OpCode] = {
-    val parsed = Parser.run(src).get
-    eval(parsed)
+    val values = Parser.run(src).get
+    eval(values)
   }
 
-  def eval(value: scala.List[Value[Nothing]]): Value[OpCode] = {
-    val compiled = compiler.compile(value)
+  def eval(values: scala.List[Value[Nothing]]): Value[OpCode] = values.map(value => {
+    val compiled = compiler.compile(scala.List(value))
     vm.run(compiled)
-  }
+  }).last
 }

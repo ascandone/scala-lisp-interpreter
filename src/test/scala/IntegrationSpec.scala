@@ -321,6 +321,10 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  they should "access global scope" in {
+    expectVmToEvalAs("(def x 42) (defmacro mac () x) (mac)", 42)
+  }
+
 
   def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
     val result = Interpreter.parseRun(str)
