@@ -16,6 +16,11 @@ object GreaterThan extends Op2Impl {
   }
 }
 
+object IsEq extends Op2Impl {
+  override def apply(x: Value[OpCode], y: Value[OpCode]): Value[OpCode] =
+    x == y
+}
+
 object Not extends Op1Impl {
   override def apply(a: Value[OpCode]): Value[OpCode] = !a.toBool
 }
@@ -46,6 +51,13 @@ object Rest extends Op1Impl {
 object IsNil extends Op1Impl {
   override def apply(lst: Value[OpCode]): Value[OpCode] = lst match {
     case List(Nil) => true
+    case _ => false
+  }
+}
+
+object IsList extends Op1Impl {
+  override def apply(lst: Value[OpCode]): Value[OpCode] = lst match {
+    case List(_) => true
     case _ => false
   }
 }

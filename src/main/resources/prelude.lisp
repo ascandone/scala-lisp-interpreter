@@ -33,5 +33,48 @@
 (defun sleep (a)
   (intrinsic/sleep a))
 
+(defun eq? (a b)
+  (intrinsic/is-eq a b))
+
+(defun list? (a)
+  (intrinsic/is-list a))
+
 (defun second (lst)
   (first (rest lst)))
+
+(defun foldr (lst z f)
+  (if (nil? lst)
+    z
+    (f
+      (first lst)
+      (foldr (rest lst) z f))))
+
+(defun concat (&rest nested)
+  (foldr
+    nested
+    ()
+    (lambda (xs ys) (foldr xs ys cons))))
+
+(defun mapcat (lst f)
+  (foldr lst ()
+    (lambda (el acc) (concat (f el) acc))))
+
+(defun map (lst f)
+  (foldr lst ()
+    (lambda (el acc) (cons (f el) acc))))
+
+(defun backquote-helper (nested)
+  (if (list? nested)
+    (if (eq? (first nested) 'unquote)
+      (list 'list (second nested))
+      (if (eq? (first nested) 'unquote-splicing)
+        (second nested)
+        (list 'list (list 'backquote nested))))
+    (list 'list (list 'quote nested))))
+
+(defmacro backquote (body)
+  (if (list? body)
+    (if (eq? (first body) 'unquote)
+      (second body)
+      (cons 'concat (map body backquote-helper)))
+    (list 'quote body)))

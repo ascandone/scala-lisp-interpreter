@@ -346,6 +346,34 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("(list 1 2 3)", List.of(1, 2, 3))
   }
 
+  it should "have a concat function" in {
+    expectVmToEvalAs("(concat)", Nil)
+    expectVmToEvalAs("(concat '(1 2) nil '(3 4))", List.of(1, 2, 3, 4))
+  }
+
+  it should "have a map function" in {
+    expectVmToEvalAs("(map nil (lambda (x) (+ 100 x)))", Nil)
+    expectVmToEvalAs("(map (list 1 2 3) (lambda (x) (+ 100 x)))", List.of(101, 102, 103))
+  }
+
+  behavior of "backquote macro"
+  it should "behave as quote when used alone" in {
+    expectVmToEvalAs("`1", 1)
+    expectVmToEvalAs("`a", Symbol("a"))
+    expectVmToEvalAs("`(1 a)", List.of(1, Symbol("a")))
+  }
+
+  it should "handle unquoting" in {
+    expectVmToEvalAs("`,42", 42)
+    expectVmToEvalAs("(def x 42) `,x", 42)
+    expectVmToEvalAs("(def x 42) `(a ,x)", List.of(Symbol("a"), 42))
+  }
+
+  it should "handle unquote splicing" in {
+    expectVmToEvalAs("`(1 2 ,@'(3 4))", List.of(1, 2, 3, 4))
+    expectVmToEvalAs("(def x (list 2 3)) `(1 ,@x 4 5)", List.of(1, 2, 3, 4, 5))
+  }
+
   def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
     val result = Interpreter.parseRun(str, loadPrelude = true)
     result should be(expected)

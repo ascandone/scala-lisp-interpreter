@@ -111,6 +111,8 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("intrinsic/rest") :: args => compileOp1(Rest, args)
         case Symbol("intrinsic/is-nil") :: args => compileOp1(IsNil, args)
         case Symbol("intrinsic/sleep") :: args => compileOp1(Sleep, args)
+        case Symbol("intrinsic/is-eq") :: args => compileOp2(IsEq, args)
+        case Symbol("intrinsic/is-list") :: args => compileOp1(IsList, args)
 
         case f :: args => compileApplication(f, args)
       }
