@@ -35,6 +35,21 @@ object First extends Op1Impl {
   }
 }
 
+object Rest extends Op1Impl {
+  override def apply(lst: Value[OpCode]): Value[OpCode] = lst match {
+    case List(Nil) => Nil
+    case List(_ :: tl) => tl
+    case _ => throw new Exception("`first` argument should be a list")
+  }
+}
+
+object IsNil extends Op1Impl {
+  override def apply(lst: Value[OpCode]): Value[OpCode] = lst match {
+    case List(Nil) => true
+    case _ => false
+  }
+}
+
 object Sleep extends Op1Impl {
   override def apply(ms: Value[OpCode]): Value[OpCode] = ms match {
     case Number(nms) => {

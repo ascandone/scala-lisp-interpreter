@@ -331,8 +331,13 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 }
 
 class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
+  it should "have a list function" in {
+    expectVmToEvalAs("(list)", Nil)
+    expectVmToEvalAs("(list 1 2 3)", List.of(1, 2, 3))
+  }
+
   def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
-    val result = Interpreter.parseRun(str)
+    val result = Interpreter.parseRun(str, loadPrelude = true)
     result should be(expected)
   }
 }

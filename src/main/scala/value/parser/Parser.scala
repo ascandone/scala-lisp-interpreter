@@ -11,7 +11,7 @@ object Parser extends RegexParsers {
 
   def symbol: Parser[Symbol[Nothing]] =
   // TODO reuse rs
-    """[a-zA-Z&_+<>\-*!/][a-zA-Z&_+<>\-*!/0-9]*""".r ^^ Symbol[Nothing]
+    """[a-zA-Z&_+<>\-*!?/][a-zA-Z&_+<>\-*!?/0-9]*""".r ^^ Symbol[Nothing]
 
   private def form: Parser[List[Nothing]] = ("(" ~> rep(value) <~ ")") ^^ List[Nothing]
 
