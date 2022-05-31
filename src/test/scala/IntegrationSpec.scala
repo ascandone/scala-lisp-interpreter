@@ -63,6 +63,18 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("""(if () (intrinsic/add 1 2) "nope")""", "nope")
   }
 
+  it should "handle nested expressions" in {
+    expectVmToEvalAs(
+      """
+        (if false
+          'ignore
+          (if true
+            (if false 'ignore 'result)
+            'ignore))
+      """, Symbol("result"))
+  }
+
+
   it should "work with complex expressions" in {
     // TODO more granular tests
     expectVmToEvalAs(
