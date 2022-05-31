@@ -23,7 +23,7 @@ object Compiler {
 
 class Compiler(vm: Vm = new Vm) {
   private val symbolTable = new SymbolTable()
-  private val macros = new mutable.HashMap[java.lang.String, Unit]()
+  private val macros = new mutable.HashMap[java.lang.String, CompiledFunction[OpCode]]()
 
   def compile(values: scala.List[Value[Nothing]]): Array[OpCode] = {
     val block = List[Nothing](
@@ -81,18 +81,12 @@ class Compiler(vm: Vm = new Vm) {
         }
 
         case Symbol(Compiler.DEF_MACRO) :: args => args match {
-          case Symbol(name) :: lam => ???
+          case Symbol(name) :: List(params) :: body :: Nil => compileMacro(name, params, body)
           case _ => throw new Exception("Invalid `defmacro` arguments")
         }
 
         case Symbol(Compiler.LAMBDA) :: args => args match {
-          case List(params) :: body :: Nil => compileLambda(
-            params.map {
-              case Symbol(name) => name
-              case _ => throw new Exception("Invalid `lambda` parameter (expected a string)")
-            },
-            body,
-          )
+          case List(params) :: body :: Nil => compileLambda(params, body)
           case _ => throw new Exception("Invalid `lambda` arguments")
         }
 
@@ -101,56 +95,64 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw new Exception("Invalid `quote` arguments")
         }
 
-        case f :: args =>
+        case f :: args => compileApplication(f, args)
+      }
+    }
+
+
+    private def compileApplication(f: Value[Nothing], args: scala.List[Value[Nothing]]): Unit =
+      lookupMacro(f) match {
+        // TODO arity
+        case Some(macroFunction) => {
+          val result = vm.run(Array(
+            Push(macroFunction),
+            Call(0),
+          ))
+
+          emitter.emit(Push(result))
+        }
+
+        case None =>
           for (arg <- args) {
             compile(arg)
           }
           compile(f)
           emitter.emit(Call(args.length))
       }
-    }
 
-    private def compileLambda(params: scala.List[java.lang.String], body: Value[Nothing] = List.of()): Unit = {
-      val compiler = new CompilerLoop(this.symbolTable.nested)
+    private def compileLambda(params: scala.List[Value[Nothing]], body: Value[Nothing] = List.of()): Unit = {
+      val lambdaSymbolTable = symbolTable.nested
+      val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
 
-      val compiledParams = CompiledParams.compile(params)
-      for (param <- compiledParams.required) {
-        compiler.symbolTable.define(param)
-      }
-      for (param <- compiledParams.optionals) {
-        compiler.symbolTable.define(param)
-      }
-      for (param <- compiledParams.rest) {
-        compiler.symbolTable.define(param)
-      }
-
-      compiler.compile(body)
-      compiler.emitter.emit(Return)
-      val instructions = compiler.collect()
-
-      val fn = CompiledFunction(
-        instructions = instructions,
-        arity = compiledParams.toArity,
-      )
-
-      if (compiler.symbolTable.freeSymbols.isEmpty) {
+      if (lambdaSymbolTable.freeSymbols.isEmpty) {
         emitter.emit(Push(fn))
       } else {
-        for (free <- compiler.symbolTable.freeSymbols) {
-          val opCode = free.scope match {
+        for (free <- lambdaSymbolTable.freeSymbols) {
+          emitter.emit(free.scope match {
             case Global => GetGlobal(free.index)
             case Local => GetLocal(free.index)
             case Free => GetFree(free.index)
-          }
-          emitter.emit(opCode)
+          })
         }
         emitter.emit(
           PushClosure(
-            freeVariables = compiler.symbolTable.freeSymbols.length,
+            freeVariables = lambdaSymbolTable.freeSymbols.length,
             fn = fn
           )
         )
       }
+    }
+
+    private def compileMacro(name: java.lang.String, params: scala.List[Value[Nothing]], body: Value[Nothing] = List.of()): Unit = {
+      val lambdaSymbolTable = symbolTable.nested
+      val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
+      macros.put(name, fn)
+      emitter.emit(Push(Nil))
+    }
+
+    private def lookupMacro(value: Value[Nothing]): Option[CompiledFunction[OpCode]] = value match {
+      case Symbol(name) => macros get name
+      case _ => None
     }
 
     private def compileDef(name: java.lang.String, value: Value[Nothing] = List.of()): Unit = {
@@ -201,6 +203,39 @@ class Compiler(vm: Vm = new Vm) {
         emitter.emit(Op2(op))
 
       case _ => throw new Exception(s"Invalid arity (expected 2, got $args)")
+    }
+  }
+
+  private object CompilerLoop {
+    private def compileLambda(
+                               symbolTable: SymbolTable,
+                               params: scala.List[Value[OpCode]],
+                               body: Value[Nothing] = List.of()
+                             ): CompiledFunction[OpCode] = {
+      val compiler = new CompilerLoop(symbolTable)
+
+      val compiledParams = CompiledParams.compile(params.map {
+        case Symbol(str) => str
+        case value => throw new Exception(s"Invalid `lambda` parameter (expected a symbol, got `${value.show}` instead)")
+      })
+      for (param <- compiledParams.required) {
+        compiler.symbolTable.define(param)
+      }
+      for (param <- compiledParams.optionals) {
+        compiler.symbolTable.define(param)
+      }
+      for (param <- compiledParams.rest) {
+        compiler.symbolTable.define(param)
+      }
+
+      compiler.compile(body)
+      compiler.emitter.emit(Return)
+      val instructions = compiler.collect()
+
+      CompiledFunction(
+        instructions = instructions,
+        arity = compiledParams.toArity,
+      )
     }
   }
 }

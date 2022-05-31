@@ -183,6 +183,21 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     ))
   }
 
+  behavior of "macros"
+  they should "be evaluated as nil when defined" in {
+    testCompileAs("(defmacro mac () ())", Array(
+      Push(Nil),
+    ))
+  }
+
+  they should "be expanded when returning literals" in {
+    testCompileAs("(defmacro mac () 42) (mac)", Array(
+      Push(Nil),
+      Pop,
+      Push(42),
+    ))
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)
