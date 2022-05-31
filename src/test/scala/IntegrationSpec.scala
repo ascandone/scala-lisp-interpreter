@@ -16,19 +16,19 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
   behavior of "+"
   it should "sum two numbers" in {
-    expectVmToEvalAs("(+ 10 20)", 30)
+    expectVmToEvalAs("(intrinsic/add 10 20)", 30)
   }
 
   behavior of ">"
   it should "behave as > operator" in {
-    expectVmToEvalAs("(> 10 200)", false)
-    expectVmToEvalAs("(> 200 10)", true)
-    expectVmToEvalAs("(> 10 10)", false)
+    expectVmToEvalAs("(intrinsic/greater-than 10 200)", false)
+    expectVmToEvalAs("(intrinsic/greater-than 200 10)", true)
+    expectVmToEvalAs("(intrinsic/greater-than 10 10)", false)
   }
 
   behavior of "native operations"
   they should "work when nested" in {
-    expectVmToEvalAs("(! (> (+ 100 1) 100))", false)
+    expectVmToEvalAs("(intrinsic/not (intrinsic/greater-than (intrinsic/add 100 1) 100))", false)
   }
 
   // TODO should reify native operations
@@ -36,7 +36,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   behavior of "def expression"
   it should "bind value to globals" in {
     expectVmToEvalAs("(def x 42) x", 42)
-    expectVmToEvalAs("(def x (+ 1 2)) x", 3)
+    expectVmToEvalAs("(def x (intrinsic/add 1 2)) x", 3)
     // TODO lambda
   }
 
@@ -55,21 +55,21 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
   behavior of "if expression"
   it should "return the first argument when truthy" in {
-    expectVmToEvalAs("(if true (+ 1 2) ())", 3)
-    expectVmToEvalAs("(if 0 (+ 1 2) ())", 3)
-    expectVmToEvalAs("(if 42 (+ 1 2) ())", 3)
+    expectVmToEvalAs("(if true (intrinsic/add 1 2) ())", 3)
+    expectVmToEvalAs("(if 0 (intrinsic/add 1 2) ())", 3)
+    expectVmToEvalAs("(if 42 (intrinsic/add 1 2) ())", 3)
   }
 
   it should "return the second argument when not truthy" in {
-    expectVmToEvalAs("""(if false (+ 1 2) "nope")""", "nope")
-    expectVmToEvalAs("""(if () (+ 1 2) "nope")""", "nope")
+    expectVmToEvalAs("""(if false (intrinsic/add 1 2) "nope")""", "nope")
+    expectVmToEvalAs("""(if () (intrinsic/add 1 2) "nope")""", "nope")
   }
 
   it should "work with complex expressions" in {
     // TODO more granular tests
     expectVmToEvalAs(
       """
-    (if (! (> 10 200))
+    (if (intrinsic/not (intrinsic/greater-than 10 200))
     "ok"
     "fail")
     """,
@@ -90,7 +90,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """
       (def x false)
 
-      (if (! x)
+      (if (intrinsic/not x)
         "ok"
         "fail")
     """,
@@ -101,8 +101,8 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """
        (def x false)
 
-       (if (! x)
-        (+ 1 (+ 1 10))
+       (if (intrinsic/not x)
+        (intrinsic/add 1 (intrinsic/add 1 10))
         "fail")
     """,
       12
@@ -116,7 +116,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   }
 
   they should "work with two arguments" in {
-    expectVmToEvalAs("""((lambda* (a b) (+ a b)) 100 200)""", 300)
+    expectVmToEvalAs("""((lambda* (a b) (intrinsic/add a b)) 100 200)""", 300)
   }
 
   they should "resolve lambda saved in def" in {
@@ -203,7 +203,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs(
       """
       (def caller (lambda* (f) (f 10)))
-      (caller (lambda* (n) (+ n 1)))
+      (caller (lambda* (n) (intrinsic/add n 1)))
       """, 11)
   }
 
@@ -222,9 +222,9 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs(
       s"""
       (def f (lambda* (n)
-        (if (> n $LIM)
+        (if (intrinsic/greater-than n $LIM)
           n
-          (f (+ 1 n)))))
+          (f (intrinsic/add 1 n)))))
 
       (f 0)
       """, LIM + 1)
@@ -236,7 +236,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """
       (def f
         (lambda* (a)
-          (lambda* (b) (+ a b))))
+          (lambda* (b) (intrinsic/add a b))))
 
       ((f 10) 100)
       """, 110)
@@ -251,7 +251,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
           (lambda* (a) (do
             (def l 42)
             (lambda* (b)
-              (+ glob (+ l (+ a b)))))))
+              (intrinsic/add glob (intrinsic/add l (intrinsic/add a b)))))))
 
         ((f 10) 100)
       """, 10 + 42 + 100 + 20)
@@ -300,7 +300,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
   they should "have access to unevaluated version of arguments" in {
     expectVmToEvalAs(
-      "(def x 42) (defmacro prevent-crash (x) (first x)) (prevent-crash (x \"this should crash\"))",
+      "(def x 42) (defmacro prevent-crash (x) (intrinsic/first x)) (prevent-crash (x \"this should crash\"))",
       42,
     )
   }
@@ -308,14 +308,14 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   they should "have be able to return quoted version of args" in {
     expectVmToEvalAs(
       """
-        (defmacro prevent-crash (x)
-          (cons 'quote
-            (cons (first x)
+        (defmacro prevent-crash (lst)
+          (intrinsic/cons 'quote
+            (intrinsic/cons (intrinsic/first lst)
               ())))
 
-        (prevent-crash (+ "this should crash"))
+        (prevent-crash (f "this should crash"))
        """,
-      Symbol("+")
+      Symbol("f")
     )
   }
 

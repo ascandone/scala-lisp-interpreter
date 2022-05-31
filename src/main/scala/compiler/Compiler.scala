@@ -19,6 +19,19 @@ object Compiler {
     val compiler = new Compiler()
     compiler.compile(values)
   }
+  /*
+
+    def lib(name: java.lang.String, args: scala.List[Value[OpCode]]) = name match {
+      case "+" => compileOp2(Add, args)
+      case ">" => compileOp2(GreaterThan, args)
+      case "!" => compileOp1(Not, args)
+      case "cons" => compileOp2(Cons, args)
+      case "first" => compileOp1(First, args)
+      case "rest" => compileOp1(Rest, args)
+      case "nil?" => compileOp1(IsNil, args)
+      case "sleep" => compileOp1(Sleep, args)
+    }
+   */
 }
 
 class Compiler(vm: Vm = new Vm) {
@@ -58,13 +71,6 @@ class Compiler(vm: Vm = new Vm) {
 
         case Symbol(Compiler.DO) :: block => compileBlock(block)
 
-        case Symbol("+") :: args => compileOp2(Add, args)
-        case Symbol(">") :: args => compileOp2(GreaterThan, args)
-        case Symbol("!") :: args => compileOp1(Not, args)
-        case Symbol("cons") :: args => compileOp2(Cons, args)
-        case Symbol("first") :: args => compileOp1(First, args)
-        case Symbol("sleep") :: args => compileOp1(Sleep, args)
-
         case Symbol(Compiler.IF) :: args => args match {
           case scala.List(cond) => compileIf(cond)
           case scala.List(cond, a) => compileIf(cond, a)
@@ -96,6 +102,15 @@ class Compiler(vm: Vm = new Vm) {
           case value :: Nil => emitter.emit(Push(value))
           case _ => throw new Exception("Invalid `quote` arguments")
         }
+
+        case Symbol("intrinsic/add") :: args => compileOp2(Add, args)
+        case Symbol("intrinsic/greater-than") :: args => compileOp2(GreaterThan, args)
+        case Symbol("intrinsic/not") :: args => compileOp1(Not, args)
+        case Symbol("intrinsic/cons") :: args => compileOp2(Cons, args)
+        case Symbol("intrinsic/first") :: args => compileOp1(First, args)
+        case Symbol("intrinsic/rest") :: args => compileOp1(Rest, args)
+        case Symbol("intrinsic/is-nil") :: args => compileOp1(IsNil, args)
+        case Symbol("intrinsic/sleep") :: args => compileOp1(Sleep, args)
 
         case f :: args => compileApplication(f, args)
       }
@@ -197,7 +212,7 @@ class Compiler(vm: Vm = new Vm) {
         compile(x)
         emitter.emit(Op1(op))
 
-      case _ => throw new Exception(s"Invalid arity (expected 1, got $args)")
+      case _ => throw new Exception(s"Invalid arity (expected 1, got ${args.length}")
     }
 
     private def compileOp2(op: Op2Impl, args: scala.List[Value[OpCode]]): Unit = args match {
@@ -206,7 +221,7 @@ class Compiler(vm: Vm = new Vm) {
         compile(y)
         emitter.emit(Op2(op))
 
-      case _ => throw new Exception(s"Invalid arity (expected 2, got $args)")
+      case _ => throw new Exception(s"Invalid arity (expected 2, got ${args.length})")
     }
   }
 

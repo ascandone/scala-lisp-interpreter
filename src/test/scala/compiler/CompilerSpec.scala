@@ -81,7 +81,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile +" in {
-    testCompileAs("(+ 1 2)",
+    testCompileAs("(intrinsic/add 1 2)",
       Array(
         Push(1),
         Push(2),
@@ -91,7 +91,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile >" in {
-    testCompileAs("(> 1 2)",
+    testCompileAs("(intrinsic/greater-than 1 2)",
       Array(
         Push(1),
         Push(2),
@@ -101,7 +101,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile not" in {
-    testCompileAs("(! true)",
+    testCompileAs("(intrinsic/not true)",
       Array(
         Push(true),
         Op1(Not),
@@ -123,7 +123,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile a if expression of expressions" in {
-    testCompileAs("(if (> 100 200) (+ 10 20) (! ()))",
+    testCompileAs("(if (intrinsic/greater-than 100 200) (intrinsic/add 10 20) (intrinsic/not ()))",
       Array(
         /* 00 */ Push(100),
         /* 01 */ Push(200),
@@ -141,7 +141,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile def expressions" in {
-    testCompileAs("(def x 10) (def y 20) (+ x y)", Array(
+    testCompileAs("(def x 10) (def y 20) (intrinsic/add x y)", Array(
       Push(10),
       SetGlobal(0),
       Pop,
@@ -158,27 +158,27 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
 
   behavior of "quote special form"
   it should "be a noop with literals" in {
-    testCompileAs("(quote 42)", Array(
+    testCompileAs("'42", Array(
       Push(42),
     ))
 
-    testCompileAs("(quote \"hello\")", Array(
+    testCompileAs("'\"hello\"", Array(
       Push("hello"),
     ))
 
-    testCompileAs("(quote ())", Array(
+    testCompileAs("'()", Array(
       Push(List()),
     ))
   }
 
   it should "prevent symbols from evaluating" in {
-    testCompileAs("(quote a)", Array(
+    testCompileAs("'a", Array(
       Push(Symbol("a")),
     ))
   }
 
   it should "prevent lists from evaluating" in {
-    testCompileAs("(quote (a b))", Array(
+    testCompileAs("'(a b)", Array(
       Push(List.of(Symbol("a"), Symbol("b"))),
     ))
   }
@@ -230,7 +230,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   they should "have access to unevaluated version of arguments" in {
-    testCompileAs("(def x 42) (defmacro prevent-crash (x) (first x)) (prevent-crash (x \"this should crash\"))", Array(
+    testCompileAs("(def x 42) (defmacro prevent-crash (x) (intrinsic/first x)) (prevent-crash (x \"this should crash\"))", Array(
       Push(42),
       SetGlobal(0),
       Pop,
@@ -246,8 +246,8 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     testCompileAs(
       """
         (defmacro prevent-crash (x)
-          (cons (quote quote)
-            (cons (first x)
+          (intrinsic/cons 'quote
+            (intrinsic/cons (intrinsic/first x)
               ())))
 
         (prevent-crash (+ "this should crash"))
