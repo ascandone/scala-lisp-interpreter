@@ -211,6 +211,15 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     ))
   }
 
+  they should "have access to arguments" in {
+    testCompileAs("(defmacro mac (x y) x) (mac 42 1)", Array(
+      Push(Nil),
+      Pop,
+
+      Push(42),
+    ))
+  }
+
   def testCompileAs(str: java.lang.String, instructions: Array[OpCode]): Unit = {
     val parsed = Parser.run(str).get
     val compiled = Compiler.compile(parsed)

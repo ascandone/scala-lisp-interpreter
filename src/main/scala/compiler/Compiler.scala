@@ -102,16 +102,17 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit =
       lookupMacro(f) match {
-        // TODO arity
-        case Some(macroFunction) => {
-          val instructions = Array[OpCode](
-            Push(macroFunction),
-            Call(0),
-          )
+        case Some(macroFunction) =>
+          val instructions = scala.List[scala.List[OpCode]](
+            args.map(Push),
+            scala.List(
+              Push(macroFunction),
+              Call(args.length),
+            )
+          ).flatten.toArray
 
           val result = vm.run(instructions)
           compile(result)
-        }
 
         case None =>
           for (arg <- args) {
