@@ -82,3 +82,9 @@
 (defmacro let1 (binding body)
     `((lambda (,(first binding)) ,body)
         ,(second binding)))
+
+(defmacro let (pairs body)
+  (if (nil? pairs)
+    body
+    `(let1 (,@(first pairs))
+        (let (,@(rest pairs)) ,body))))
