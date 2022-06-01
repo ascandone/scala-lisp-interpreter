@@ -6,9 +6,12 @@ import vm._
 import scala.collection.mutable
 
 object Compiler {
-  val DO = "do"
+  // Constants
   val TRUE = "true"
   val FALSE = "false"
+  val DO = "do"
+
+  // Special forms
   val IF = "if"
   val DEF = "def"
   val LAMBDA = "lambda*"
