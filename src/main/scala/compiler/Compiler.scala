@@ -9,13 +9,15 @@ object Compiler {
   // Constants
   val TRUE = "true"
   val FALSE = "false"
-  val DO = "do"
 
   // Special forms
+  val DO = "do"
   val IF = "if"
   val DEF = "def"
   val LAMBDA = "lambda*"
   val QUOTE = "quote"
+
+  // Compilation level
   val DEF_MACRO = "defmacro"
 
   def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
