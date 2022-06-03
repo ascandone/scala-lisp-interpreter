@@ -21,10 +21,6 @@ object IsEq extends Op2Impl {
     x == y
 }
 
-object Not extends Op1Impl {
-  override def apply(a: Value[OpCode]): Value[OpCode] = !a.toBool
-}
-
 object Cons extends Op2Impl {
   override def apply(head: Value[OpCode], tail: Value[OpCode]): Value[OpCode] = tail match {
     case List(tail_) => List(head :: tail_)

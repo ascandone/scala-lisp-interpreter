@@ -98,7 +98,6 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/add") :: args => compileOp2(Add, args)
         case Symbol("builtin/log") :: args => compileOp1(Log, args)
         case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)
-        case Symbol("builtin/not") :: args => compileOp1(Not, args)
         case Symbol("builtin/cons") :: args => compileOp2(Cons, args)
         case Symbol("builtin/first") :: args => compileOp1(First, args)
         case Symbol("builtin/rest") :: args => compileOp1(Rest, args)

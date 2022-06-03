@@ -9,14 +9,12 @@
   (list 'def name
     (builtin/cons 'lambda (builtin/cons params body))))
 
+; Builtin
 (defun + (a b)
   (builtin/add a b))
 
 (defun > (a b)
   (builtin/greater-than a b))
-
-(defun ! (a)
-  (builtin/not a))
 
 (defun cons (a b)
   (builtin/cons a b))
@@ -44,6 +42,10 @@
 
 (defun second (lst)
   (first (rest lst)))
+
+; Other
+(defun ! (b)
+  (if b false true))
 
 (defun foldr (lst z f)
   (if (nil? lst)
