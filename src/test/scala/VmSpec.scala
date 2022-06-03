@@ -160,13 +160,13 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       (f 0)
     */
 
-    val LIM = 4
+    val LIM = 4.toFloat
 
     val fn = CompiledFunction[OpCode](
       arity = ArgumentsArity(required = 1),
       instructions = Array(
         /* 00 */ GetLocal(0),
-        /* 01 */ Push(LIM.toFloat),
+        /* 01 */ Push(LIM),
         /* 02 */ Op2(GreaterThan),
         /* 03 */ JumpIfNot(6),
         /* 04 */ GetLocal(0),
