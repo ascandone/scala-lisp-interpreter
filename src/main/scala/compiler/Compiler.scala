@@ -95,17 +95,17 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw new Exception("Invalid `quote` arguments")
         }
 
-        case Symbol("intrinsic/add") :: args => compileOp2(Add, args)
-        case Symbol("intrinsic/log") :: args => compileOp1(Log, args)
-        case Symbol("intrinsic/greater-than") :: args => compileOp2(GreaterThan, args)
-        case Symbol("intrinsic/not") :: args => compileOp1(Not, args)
-        case Symbol("intrinsic/cons") :: args => compileOp2(Cons, args)
-        case Symbol("intrinsic/first") :: args => compileOp1(First, args)
-        case Symbol("intrinsic/rest") :: args => compileOp1(Rest, args)
-        case Symbol("intrinsic/is-nil") :: args => compileOp1(IsNil, args)
-        case Symbol("intrinsic/sleep") :: args => compileOp1(Sleep, args)
-        case Symbol("intrinsic/is-eq") :: args => compileOp2(IsEq, args)
-        case Symbol("intrinsic/is-list") :: args => compileOp1(IsList, args)
+        case Symbol("builtin/add") :: args => compileOp2(Add, args)
+        case Symbol("builtin/log") :: args => compileOp1(Log, args)
+        case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)
+        case Symbol("builtin/not") :: args => compileOp1(Not, args)
+        case Symbol("builtin/cons") :: args => compileOp2(Cons, args)
+        case Symbol("builtin/first") :: args => compileOp1(First, args)
+        case Symbol("builtin/rest") :: args => compileOp1(Rest, args)
+        case Symbol("builtin/is-nil") :: args => compileOp1(IsNil, args)
+        case Symbol("builtin/sleep") :: args => compileOp1(Sleep, args)
+        case Symbol("builtin/is-eq") :: args => compileOp2(IsEq, args)
+        case Symbol("builtin/is-list") :: args => compileOp1(IsList, args)
 
         case f :: args => compileApplication(f, args)
       }

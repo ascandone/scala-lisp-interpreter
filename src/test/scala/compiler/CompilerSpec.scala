@@ -81,7 +81,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile +" in {
-    testCompileAs("(intrinsic/add 1 2)",
+    testCompileAs("(builtin/add 1 2)",
       Array(
         Push(1),
         Push(2),
@@ -91,7 +91,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile >" in {
-    testCompileAs("(intrinsic/greater-than 1 2)",
+    testCompileAs("(builtin/greater-than 1 2)",
       Array(
         Push(1),
         Push(2),
@@ -101,7 +101,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile not" in {
-    testCompileAs("(intrinsic/not true)",
+    testCompileAs("(builtin/not true)",
       Array(
         Push(true),
         Op1(Not),
@@ -123,7 +123,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile a if expression of expressions" in {
-    testCompileAs("(if (intrinsic/greater-than 100 200) (intrinsic/add 10 20) (intrinsic/not ()))",
+    testCompileAs("(if (builtin/greater-than 100 200) (builtin/add 10 20) (builtin/not ()))",
       Array(
         /* 00 */ Push(100),
         /* 01 */ Push(200),
@@ -141,7 +141,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile def expressions" in {
-    testCompileAs("(def x 10) (def y 20) (intrinsic/add x y)", Array(
+    testCompileAs("(def x 10) (def y 20) (builtin/add x y)", Array(
       Push(10),
       SetGlobal(0),
       Pop,
@@ -230,7 +230,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   they should "have access to unevaluated version of arguments" in {
-    testCompileAs("(def x 42) (defmacro prevent-crash (x) (intrinsic/first x)) (prevent-crash (x \"this should crash\"))", Array(
+    testCompileAs("(def x 42) (defmacro prevent-crash (x) (builtin/first x)) (prevent-crash (x \"this should crash\"))", Array(
       Push(42),
       SetGlobal(0),
       Pop,
@@ -246,8 +246,8 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     testCompileAs(
       """
         (defmacro prevent-crash (x)
-          (intrinsic/cons 'quote
-            (intrinsic/cons (intrinsic/first x)
+          (builtin/cons 'quote
+            (builtin/cons (builtin/first x)
               ())))
 
         (prevent-crash (+ "this should crash"))

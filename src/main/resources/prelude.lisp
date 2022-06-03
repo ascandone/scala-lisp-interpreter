@@ -3,44 +3,44 @@
 (def list (lambda* (&rest args) args))
 
 (defmacro lambda (params &rest body)
-  (list 'lambda* params (intrinsic/cons 'do body)))
+  (list 'lambda* params (builtin/cons 'do body)))
 
 (defmacro defun (name params &rest body)
   (list 'def name
-    (intrinsic/cons 'lambda (intrinsic/cons params body))))
+    (builtin/cons 'lambda (builtin/cons params body))))
 
 (defun + (a b)
-  (intrinsic/add a b))
+  (builtin/add a b))
 
 (defun > (a b)
-  (intrinsic/greater-than a b))
+  (builtin/greater-than a b))
 
 (defun ! (a)
-  (intrinsic/not a))
+  (builtin/not a))
 
 (defun cons (a b)
-  (intrinsic/cons a b))
+  (builtin/cons a b))
 
 (defun first (a)
-  (intrinsic/first a))
+  (builtin/first a))
 
 (defun rest (a)
-  (intrinsic/rest a))
+  (builtin/rest a))
 
 (defun nil? (a)
-  (intrinsic/is-nil a))
+  (builtin/is-nil a))
 
 (defun sleep (a)
-  (intrinsic/sleep a))
+  (builtin/sleep a))
 
 (defun log (a)
-  (intrinsic/log a))
+  (builtin/log a))
 
 (defun eq? (a b)
-  (intrinsic/is-eq a b))
+  (builtin/is-eq a b))
 
 (defun list? (a)
-  (intrinsic/is-list a))
+  (builtin/is-list a))
 
 (defun second (lst)
   (first (rest lst)))
