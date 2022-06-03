@@ -100,6 +100,15 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  it should "compile not" in {
+    testCompileAs("(builtin/not true)",
+      Array(
+        Push(true),
+        Op1(Not),
+      )
+    )
+  }
+
   it should "compile a if expression of values" in {
     testCompileAs("(if true \"when true\" \"when false\")",
       Array(
@@ -114,7 +123,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "compile a if expression of expressions" in {
-    testCompileAs("(if (builtin/greater-than 100 200) (builtin/add 10 20) (builtin/cons 42 ()))",
+    testCompileAs("(if (builtin/greater-than 100 200) (builtin/add 10 20) (builtin/not ()))",
       Array(
         /* 00 */ Push(100),
         /* 01 */ Push(200),
@@ -123,10 +132,9 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
         /* 04 */ Push(10), // if branch
         /* 05 */ Push(20),
         /* 06 */ Op2(Add),
-        /* 07 */ Jump(11),
-        /* 08 */ Push(42),
-        /* 08 */ Push(Nil),
-        /* 09 */ Op2(Cons), // else branch
+        /* 07 */ Jump(10),
+        /* 08 */ Push(List.of()), // else branch
+        /* 09 */ Op1(Not), // else branch
         /* 10 */
       )
     )
