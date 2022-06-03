@@ -240,6 +240,63 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """, LIM + 1)
   }
 
+  they should "work with recursive bindings (without tail call)" in {
+    val LIM = 4
+
+    expectVmToEvalAs(
+      s"""
+      (def f (lambda* (n)
+        (if (intrinsic/greater-than n $LIM)
+          n
+          (intrinsic/add 1 (f (intrinsic/add 1 n))))))
+
+      (f 0)
+      """, 10)
+  }
+
+  behavior of "tail call optimization"
+  it should "allow simple recursion" in {
+    val LIM = 1_000_000
+
+    expectVmToEvalAs(
+      s"""
+      (def f (lambda* (n)
+        (if (intrinsic/greater-than n $LIM)
+          n
+          (f (intrinsic/add 1 n)))))
+
+      (f 0)
+      """, LIM + 1)
+  }
+
+  it should "allow simple recursion with two params" in {
+    val LIM = 4000
+
+    expectVmToEvalAs(
+      s"""
+      (def sum-n (lambda* (n acc)
+        (if (intrinsic/greater-than n $LIM)
+          acc
+          (sum-n (intrinsic/add 1 n) (intrinsic/add acc n)))))
+
+      (sum-n 0 0)
+      """, LIM * (LIM + 1) / 2)
+  }
+
+  it should "allow simple recursion with two params and one optional" in {
+    val LIM = 4000
+
+    expectVmToEvalAs(
+      s"""
+      (def sum-n (lambda* (n &opt acc)
+        (if (intrinsic/greater-than n $LIM)
+          acc
+          (sum-n (intrinsic/add 1 n) (intrinsic/add acc n)))))
+
+      (sum-n 0 0)
+      """, LIM * (LIM + 1) / 2)
+  }
+
   behavior of "closures"
   they should "have access to outer scope" in {
     expectVmToEvalAs(

@@ -6,6 +6,13 @@ class ArrayStack[A: ClassTag](private var size: Int = 1024) {
   private val array = new Array[A](size)
   private var pointer = -1;
 
+  def withPointer(startingPointer: Int, ops: => Unit): Unit = {
+    val initialPointer = pointer
+    pointer = startingPointer - 1
+    ops
+    pointer = initialPointer
+  }
+
   def push(value: A): Unit = {
     // TODO check stack overflow
     pointer += 1
@@ -34,4 +41,6 @@ class ArrayStack[A: ClassTag](private var size: Int = 1024) {
 
   def get(index: Int): A =
     array(index)
+
+  def toArray: Array[A] = array.slice(0, pointer + 1)
 }

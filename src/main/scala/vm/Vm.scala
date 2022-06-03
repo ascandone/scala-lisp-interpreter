@@ -1,5 +1,6 @@
 package vm
 
+import value.ArgumentsArity.ParsedArguments
 import value._
 import vm.mutable.ArrayStack
 
@@ -110,28 +111,19 @@ class Vm {
           case Left(ArgumentsArity.TooManyArgs(extra)) => throw new Exception(s"Arity error (got $extra more)")
           case Right(parsedArgs) => {
 
-            for (arg <- parsedArgs.required) {
-              stack.push(arg)
+            if (frames.peek().closure.fn == closure.fn && closure.fn.instructions(frames.peek().ip) == Return) {
+              stack.withPointer(frames.peek().basePointer, {
+                handleCallPush(parsedArgs)
+              })
+              frames.peek().ip = 0
+            } else {
+              handleCallPush(parsedArgs)
+
+              frames.push(new Frame(
+                closure = closure,
+                basePointer = stack.length() - closure.fn.arity.size
+              ))
             }
-
-            val (optionalPassed, optionalsNotGiven) = parsedArgs.optionals
-
-            for (arg <- optionalPassed) {
-              stack.push(arg)
-            }
-
-            for (_ <- 0 until optionalsNotGiven) {
-              stack.push(Value.nil)
-            }
-
-            for (restArgs <- parsedArgs.rest) {
-              stack.push(List(restArgs))
-            }
-
-            frames.push(new Frame(
-              closure = closure,
-              basePointer = stack.length() - closure.fn.arity.size
-            ))
           }
         }
 
@@ -166,6 +158,26 @@ class Vm {
       case GetFree(ident) =>
         val value = frames.peek().closure.freeVariables(ident)
         stack.push(value)
+    }
+
+    private def handleCallPush(parsedArgs: ParsedArguments[Value[OpCode]]): Unit = {
+      for (arg <- parsedArgs.required) {
+        stack.push(arg)
+      }
+
+      val (optionalPassed, optionalsNotGiven) = parsedArgs.optionals
+
+      for (arg <- optionalPassed) {
+        stack.push(arg)
+      }
+
+      for (_ <- 0 until optionalsNotGiven) {
+        stack.push(Value.nil)
+      }
+
+      for (restArgs <- parsedArgs.rest) {
+        stack.push(List(restArgs))
+      }
     }
   }
 }
