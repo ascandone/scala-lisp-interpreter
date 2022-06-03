@@ -120,7 +120,7 @@ class Vm {
               stack.push(arg)
             }
 
-            for (_ <- (0 until optionalsNotGiven)) {
+            for (_ <- 0 until optionalsNotGiven) {
               stack.push(Value.nil)
             }
 
