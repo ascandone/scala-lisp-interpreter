@@ -26,6 +26,8 @@ case class GetLocal(ident: Int) extends OpCode
 
 case class Call(passedArgs: Int) extends OpCode
 
+case object Apply extends OpCode
+
 case object Return extends OpCode
 
 case class PushClosure(freeVariables: Int, fn: CompiledFunction[OpCode]) extends OpCode

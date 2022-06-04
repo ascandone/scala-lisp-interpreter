@@ -95,6 +95,11 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw new Exception("Invalid `quote` arguments")
         }
 
+        case Symbol("builtin/apply") :: f :: lst :: Nil =>
+          compile(f)
+          compile(lst)
+          emitter.emit(Apply)
+
         case Symbol("builtin/add") :: args => compileOp2(Add, args)
         case Symbol("builtin/log") :: args => compileOp1(Log, args)
         case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)

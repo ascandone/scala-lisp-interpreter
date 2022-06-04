@@ -11,6 +11,17 @@ object Vm {
     val vm = new Vm
     vm.run(instructions)
   }
+
+  private def valueToClosure(value: Value[OpCode]): Closure[OpCode] = value match {
+    case fn@CompiledFunction(_, _) => Closure(
+      freeVariables = Array(),
+      fn = fn,
+    )
+
+    case closure@Closure(_, _) => closure
+
+    case _ => throw new Exception("Expected a function")
+  }
 }
 
 class Vm {
@@ -90,42 +101,23 @@ class Vm {
         case Some(value) => stack.push(value)
       }
 
+      case Apply => {
+        val givenArgs = stack.pop() match {
+          case List(lst) => lst
+          // TODO better err
+          case _ => throw new Exception("Expected a list")
+        }
+
+        val closure = Vm.valueToClosure(stack.pop())
+
+        callFunction(closure, givenArgs)
+      }
+
       case Call(argsGivenNumber) =>
         val value = stack.pop()
-        val closure: Closure[OpCode] = value match {
-          case fn@CompiledFunction(_, _) => Closure(
-            freeVariables = Array(),
-            fn = fn,
-          )
-
-          case closure@Closure(_, _) => closure
-
-          case _ => throw new Exception("Expected a function")
-        }
-
+        val closure = Vm.valueToClosure(value)
         val givenArgs = (0 until argsGivenNumber).map(_ => stack.pop()).reverse.toList
-
-        closure.fn.arity parse givenArgs match {
-          // TODO better error
-          case Left(ArgumentsArity.RequiredArgsMissing(expected, got)) => throw new Exception(s"Arity error (expected at least $expected, got $got)")
-          case Left(ArgumentsArity.TooManyArgs(extra)) => throw new Exception(s"Arity error (got $extra more)")
-          case Right(parsedArgs) => {
-
-            if (frames.peek().closure.fn == closure.fn && closure.fn.instructions(frames.peek().ip) == Return) {
-              stack.withPointer(frames.peek().basePointer, {
-                handleCallPush(parsedArgs)
-              })
-              frames.peek().ip = 0
-            } else {
-              handleCallPush(parsedArgs)
-
-              frames.push(new Frame(
-                closure = closure,
-                basePointer = stack.length() - closure.fn.arity.size
-              ))
-            }
-          }
-        }
+        callFunction(closure, givenArgs)
 
       case Return =>
         val retValue = stack.pop()
@@ -159,6 +151,28 @@ class Vm {
         val value = frames.peek().closure.freeVariables(ident)
         stack.push(value)
     }
+
+    private def callFunction(closure: Closure[OpCode], givenArgs: scala.List[Value[OpCode]]): Unit =
+      closure.fn.arity parse givenArgs match {
+        // TODO better error
+        case Left(ArgumentsArity.RequiredArgsMissing(expected, got)) => throw new Exception(s"Arity error (expected at least $expected, got $got)")
+        case Left(ArgumentsArity.TooManyArgs(extra)) => throw new Exception(s"Arity error (got $extra more)")
+        case Right(parsedArgs) =>
+
+          if (frames.peek().closure.fn == closure.fn && closure.fn.instructions(frames.peek().ip) == Return) {
+            stack.withPointer(frames.peek().basePointer, {
+              handleCallPush(parsedArgs)
+            })
+            frames.peek().ip = 0
+          } else {
+            handleCallPush(parsedArgs)
+
+            frames.push(new Frame(
+              closure = closure,
+              basePointer = stack.length() - closure.fn.arity.size
+            ))
+          }
+      }
 
     private def handleCallPush(parsedArgs: ParsedArguments[Value[OpCode]]): Unit = {
       for (arg <- parsedArgs.required) {

@@ -26,6 +26,11 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("(builtin/greater-than 10 10)", false)
   }
 
+  behavior of "apply"
+  it should "work with nonempty lists" in {
+    expectVmToEvalAs("(def args '(10 20)) (builtin/apply (lambda* (x y) (builtin/add x y)) args)", 30)
+  }
+
   behavior of "native operations"
   they should "work when nested" in {
     expectVmToEvalAs("(builtin/not (builtin/greater-than (builtin/add 100 1) 100))", false)
