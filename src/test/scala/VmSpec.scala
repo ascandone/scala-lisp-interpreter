@@ -24,7 +24,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
     val instructions: Array[OpCode] = Array(
       Push(10),
       Push(20),
-      Op2(Add),
+      Builtin(Add),
     )
     Vm.runOnce(instructions) should be(Number(30))
   }
@@ -86,7 +86,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
     val fn = CompiledFunction[OpCode](instructions = Array(
       Push(100),
       Push(42),
-      Op2(Add),
+      Builtin(Add),
       Return,
     ))
 
@@ -104,7 +104,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Push(Value.nil),
       GetLocal(0),
       GetLocal(1),
-      Op2(Add),
+      Builtin(Add),
       Return,
     ))
 
@@ -125,7 +125,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       instructions = Array(
         GetFree(0),
         GetLocal(0),
-        Op2(Add),
+        Builtin(Add),
         Return,
       )
     )
@@ -167,13 +167,13 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       instructions = Array(
         /* 00 */ GetLocal(0),
         /* 01 */ Push(LIM),
-        /* 02 */ Op2(GreaterThan),
+        /* 02 */ Builtin(GreaterThan),
         /* 03 */ JumpIfNot(6),
         /* 04 */ GetLocal(0),
         /* 05 */ Jump(11),
         /* 06 */ Push(1), // <- 03
         /* 07 */ GetLocal(0),
-        /* 08 */ Op2(Add),
+        /* 08 */ Builtin(Add),
         /* 09 */ GetGlobal(0),
         /* 10 */ Call(1),
         /* 11 */ Return,
@@ -223,7 +223,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       instructions = Array(
         GetLocal(0),
         GetLocal(1),
-        Op2(Cons),
+        Builtin(Cons),
         Return,
       ))
 

@@ -59,16 +59,64 @@ class Vm {
 
       case Pop => stack.pop()
 
-      case Op1(f) =>
-        val value = stack.pop()
-        val result = f(value)
-        stack.push(result)
+      case Builtin(op) => op match {
+        case Add => op2((x, y) =>
+          (x, y) match {
+            case (Number(na), Number(nb)) => Number(na + nb)
+            case _ => throw new Exception(s"Add error (expected numbers, got ${x.show} and ${y.show}")
+          })
 
-      case Op2(f) =>
-        val right = stack.pop()
-        val left = stack.pop()
-        val result = f(left, right)
-        stack.push(result)
+        case IsEq => op2((x, y) => x == y)
+
+        case GreaterThan => op2((a, b) => (a, b) match {
+          case (Number(na), Number(nb)) => na > nb
+          case _ => throw new Exception("GT error")
+        })
+
+        case Not => op1(a => !a.toBool)
+
+        case Cons => op2((head, tail) =>
+          tail match {
+            case List(tail_) => List(head :: tail_)
+            case _ => throw new Exception("Cons tail should be a list")
+          })
+
+        case First => op1 {
+          case List(Nil) => Nil
+          case List(hd :: _) => hd
+          case _ => throw new Exception("`first` argument should be a list")
+        }
+
+        case Rest => op1 {
+          case List(Nil) => Nil
+          case List(_ :: tl) => tl
+          case _ => throw new Exception("`first` argument should be a list")
+        }
+
+        case IsNil => op1 {
+          case List(Nil) => true
+          case _ => false
+        }
+
+        case IsList => op1 {
+          case List(_) => true
+          case _ => false
+        }
+
+        case Sleep => op1 {
+          case Number(nms) => {
+            Thread.sleep(nms.toLong)
+            Value.nil
+          }
+          case _ => throw new Exception("Invalid sleep args")
+        }
+
+        case Log => op1(x => {
+          println(x.show)
+          Value.nil
+        })
+
+      }
 
       case Jump(target) =>
         frames.peek().ip = target
@@ -178,6 +226,19 @@ class Vm {
       for (restArgs <- parsedArgs.rest) {
         stack.push(List(restArgs))
       }
+    }
+
+    private def op2(f: (Value[OpCode], Value[OpCode]) => Value[OpCode]): Unit = {
+      val y = stack.pop()
+      val x = stack.pop()
+      val ret = f(x, y)
+      stack.push(ret)
+    }
+
+    private def op1(f: Value[OpCode] => Value[OpCode]): Unit = {
+      val x = stack.pop()
+      val ret = f(x)
+      stack.push(ret)
     }
   }
 }
