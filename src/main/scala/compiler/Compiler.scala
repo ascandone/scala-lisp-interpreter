@@ -95,16 +95,20 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw new Exception("Invalid `quote` arguments")
         }
 
-        case f :: args => getBuiltin(f) match {
-          case Some(value) => compileBuiltin(value, args)
-          case None => compileApplication(f, args)
-        }
-      }
-    }
+        case Symbol("builtin/add") :: args => compileOp2(Add, args)
+        case Symbol("builtin/log") :: args => compileOp1(Log, args)
+        case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)
+        case Symbol("builtin/not") :: args => compileOp1(Not, args)
+        case Symbol("builtin/cons") :: args => compileOp2(Cons, args)
+        case Symbol("builtin/first") :: args => compileOp1(First, args)
+        case Symbol("builtin/rest") :: args => compileOp1(Rest, args)
+        case Symbol("builtin/is-nil") :: args => compileOp1(IsNil, args)
+        case Symbol("builtin/sleep") :: args => compileOp1(Sleep, args)
+        case Symbol("builtin/is-eq") :: args => compileOp2(IsEq, args)
+        case Symbol("builtin/is-list") :: args => compileOp1(IsList, args)
 
-    private def getBuiltin(x: Value[OpCode]): Option[Op] = x match {
-      case Symbol(name) => CompilerLoop.builtins.get(name)
-      case _ => None
+        case f :: args => compileApplication(f, args)
+      }
     }
 
 
@@ -198,29 +202,25 @@ class Compiler(vm: Vm = new Vm) {
       beginBranchFalse.fill(Jump)
     }
 
-    private def compileBuiltin(op: Op, args: scala.List[Value[OpCode]]): Unit = {
-      for (arg <- args) {
-        compile(arg)
-      }
-      emitter.emit(Builtin(op))
+    private def compileOp1(op: Op1Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+      case scala.List(x) =>
+        compile(x)
+        emitter.emit(Op1(op))
+
+      case _ => throw new Exception(s"Invalid arity (expected 1, got ${args.length}")
+    }
+
+    private def compileOp2(op: Op2Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+      case scala.List(x, y) =>
+        compile(x)
+        compile(y)
+        emitter.emit(Op2(op))
+
+      case _ => throw new Exception(s"Invalid arity (expected 2, got ${args.length})")
     }
   }
 
   private object CompilerLoop {
-    private val builtins = mutable.HashMap[java.lang.String, Op](
-      "builtin/add" -> Add,
-      "builtin/log" -> Log,
-      "builtin/greater-than" -> GreaterThan,
-      "builtin/not" -> Not,
-      "builtin/cons" -> Cons,
-      "builtin/first" -> First,
-      "builtin/rest" -> Rest,
-      "builtin/is-nil" -> IsNil,
-      "builtin/is-eq" -> IsEq,
-      "builtin/sleep" -> Sleep,
-      "builtin/is-list" -> IsList,
-    )
-
     private def compileLambda(
                                symbolTable: SymbolTable,
                                params: scala.List[Value[OpCode]],

@@ -8,7 +8,9 @@ case class Push(value: Value[OpCode]) extends OpCode
 
 case object Pop extends OpCode
 
-case class Builtin(op: Op) extends OpCode
+case class Op1(impl: Op1Impl) extends OpCode
+
+case class Op2(impl: Op2Impl) extends OpCode
 
 case class Jump(target: Int) extends OpCode
 
@@ -30,28 +32,11 @@ case class PushClosure(freeVariables: Int, fn: CompiledFunction[OpCode]) extends
 
 case class GetFree(ident: Int) extends OpCode
 
-// Builtin
-sealed trait Op
+trait Op1Impl {
+  def apply(x: Value[OpCode]): Value[OpCode]
+}
 
-object Add extends Op
-
-object GreaterThan extends Op
-
-object IsEq extends Op
-
-object Not extends Op
-
-object Cons extends Op
-
-object First extends Op
-
-object Rest extends Op
-
-object IsNil extends Op
-
-object IsList extends Op
-
-object Log extends Op
-
-object Sleep extends Op
+trait Op2Impl {
+  def apply(x: Value[OpCode], y: Value[OpCode]): Value[OpCode]
+}
 
