@@ -85,7 +85,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
       Array(
         Push(1),
         Push(2),
-        Op2(Add),
+        Add,
       )
     )
   }
@@ -95,7 +95,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
       Array(
         Push(1),
         Push(2),
-        Op2(GreaterThan),
+        GreaterThan,
       )
     )
   }
@@ -104,7 +104,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     testCompileAs("(builtin/not true)",
       Array(
         Push(true),
-        Op1(Not),
+        Not,
       )
     )
   }
@@ -127,14 +127,14 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
       Array(
         /* 00 */ Push(100),
         /* 01 */ Push(200),
-        /* 02 */ Op2(GreaterThan),
+        /* 02 */ GreaterThan,
         /* 03 */ JumpIfNot(8),
         /* 04 */ Push(10), // if branch
         /* 05 */ Push(20),
-        /* 06 */ Op2(Add),
+        /* 06 */ Add,
         /* 07 */ Jump(10),
         /* 08 */ Push(List.of()), // else branch
-        /* 09 */ Op1(Not), // else branch
+        /* 09 */ Not, // else branch
         /* 10 */
       )
     )
@@ -152,7 +152,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
 
       GetGlobal(0),
       GetGlobal(1),
-      Op2(Add),
+      Add,
     ))
   }
 

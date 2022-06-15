@@ -72,25 +72,28 @@ class Vm {
       stack.peek()
     }
 
+    private def runOp0(f: () => Value[OpCode]): Unit = {
+      val result = f()
+      stack.push(result)
+    }
+
+    private def runOp1(f: (Value[OpCode]) => Value[OpCode]): Unit = {
+      val x = stack.pop()
+      val result = f(x)
+      stack.push(result)
+    }
+
+    private def runOp2(f: (Value[OpCode], Value[OpCode]) => Value[OpCode]): Unit = {
+      val y = stack.pop()
+      val x = stack.pop()
+      val result = f(x, y)
+      stack.push(result)
+    }
+
     private def step(opCode: OpCode): Unit = opCode match {
       case Push(value) => stack.push(value)
 
       case Pop => stack.pop()
-
-      case Op0(f) =>
-        val result = f()
-        stack.push(result)
-
-      case Op1(f) =>
-        val value = stack.pop()
-        val result = f(value)
-        stack.push(result)
-
-      case Op2(f) =>
-        val right = stack.pop()
-        val left = stack.pop()
-        val result = f(left, right)
-        stack.push(result)
 
       case Jump(target) =>
         frames.peek().ip = target
@@ -123,6 +126,70 @@ class Vm {
 
         callFunction(closure, givenArgs)
       }
+
+      case Add => runOp2((x, y) => (x, y) match {
+        case (Number(na), Number(nb)) => Number(na + nb)
+        case _ => throw new Exception(s"Add error (expected numbers, got ${x.show} and ${y.show}")
+      })
+
+
+      case GreaterThan => runOp2((a, b) => (a, b) match {
+        case (Number(na), Number(nb)) => na > nb
+        case _ => throw new Exception("GT error")
+      })
+
+      case IsEq => runOp2((x, y) => x == y)
+
+      // TODO impl toBool
+      case Not => runOp1(a => !a.toBool)
+
+      case Cons => runOp2((head, tail) => tail match {
+        case List(tail_) => List(head :: tail_)
+        case _ => throw new Exception("Cons tail should be a list")
+      })
+
+      case First => runOp1 {
+        case List(Nil) => Nil
+        case List(hd :: _) => hd
+        case _ => throw new Exception("`first` argument should be a list")
+      }
+
+      case Rest => runOp1({
+        case List(Nil) => Nil
+        case List(_ :: tl) => tl
+        case _ => throw new Exception("`rest` argument should be a list")
+      })
+
+      case IsNil => runOp1({
+        case List(Nil) => true
+        case _ => false
+      })
+
+      case IsList => runOp1({
+        case List(_) => true
+        case _ => false
+      })
+
+      case Sleep => runOp1({
+        case Number(nms) => {
+          Thread.sleep(nms.toLong)
+          Value.nil
+        }
+        case _ => throw new Exception("Invalid sleep args")
+      })
+
+      case Log => runOp1(x => {
+        println(x.show)
+        Value.nil
+      })
+
+      case Panic => runOp1({
+        case String(reason) => throw new Exception(reason)
+        case _ => throw new Exception("Invalid panic args (expected a string)")
+      })
+
+
+      case Self => runOp0(() => Thread.currentThread().getId.toFloat)
 
       case Fork =>
         val closure = Vm.valueToClosure(stack.pop())
@@ -158,7 +225,7 @@ class Vm {
           case Number(n) => n
           case _ => throw new Exception("expected a number")
         }
-        
+
         val maybeQueue = queues.get(id)
         maybeQueue match {
           case None => throw new Exception(s"thread $id not found (in send)")

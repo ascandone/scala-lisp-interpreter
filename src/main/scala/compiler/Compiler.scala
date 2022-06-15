@@ -223,29 +223,29 @@ class Compiler(vm: Vm = new Vm) {
       beginBranchFalse.fill(Jump)
     }
 
-    private def compileOp0(op: Op0Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+    private def compileOp0(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case Nil =>
-        emitter.emit(Op0(op))
+        emitter.emit(op)
 
       case _ => throw new Exception(s"Invalid arity (expected 0, got ${args.length}")
     }
 
-    private def compileOp1(op: Op1Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+    private def compileOp1(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case scala.List(x) =>
         compile(x)
-        emitter.emit(Op1(op))
+        emitter.emit(op)
 
       case _ => throw new Exception(s"Invalid arity (expected 1, got ${args.length}")
     }
 
-    private def compileOp2(op: Op2Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+    private def compileOp2(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case scala.List(x, y) =>
         compile(x)
         compile(y)
-        emitter.emit(Op2(op))
-
+        emitter.emit(op)
       case _ => throw new Exception(s"Invalid arity (expected 2, got ${args.length})")
     }
+
   }
 
   private object CompilerLoop {
