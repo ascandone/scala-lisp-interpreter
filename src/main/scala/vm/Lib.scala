@@ -78,3 +78,14 @@ object Log extends Op1Impl {
     Value.nil
   }
 }
+
+object Panic extends Op1Impl {
+  override def apply(x: Value[OpCode]): Value[OpCode] = x match {
+    case String(reason) => throw new Exception(reason)
+    case _ => throw new Exception("Invalid panic args (expected a string)")
+  }
+}
+
+object Self extends Op0Impl {
+  override def apply(): Value[OpCode] = Thread.currentThread().getId.toFloat
+}

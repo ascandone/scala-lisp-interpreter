@@ -33,6 +33,10 @@
 (defun sleep (a)
   (builtin/sleep a))
 
+(defun receive () (builtin/receive))
+(defun send (a b) (builtin/send a b))
+(defun self () (builtin/self))
+
 (defun log (a)
   (builtin/log a))
 
@@ -91,3 +95,7 @@
     body
     `(let1 (,@(first pairs))
         (let (,@(rest pairs)) ,body))))
+
+
+(defmacro fork (&rest body)
+  `(builtin/fork (lambda () ,@body)))

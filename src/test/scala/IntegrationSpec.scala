@@ -429,6 +429,7 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("`,42", 42)
     expectVmToEvalAs("(def x 42) `,x", 42)
     expectVmToEvalAs("(def x 42) `(a ,x)", List.of(Symbol("a"), 42))
+    expectVmToEvalAs("(def x 42) `(a (y ,x))", List.of(Symbol("a"), List.of(Symbol("y"), 42)))
   }
 
   it should "handle unquote splicing" in {

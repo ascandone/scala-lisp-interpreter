@@ -4,6 +4,7 @@ import value.ArgumentsArity.ParsedArguments
 import value._
 import vm.mutable.ArrayStack
 
+import java.util.concurrent.LinkedTransferQueue
 import scala.collection.mutable
 
 object Vm {
@@ -20,12 +21,18 @@ object Vm {
 
     case closure@Closure(_, _) => closure
 
-    case _ => throw new Exception("Expected a function")
+    case _ => throw new Exception(s"Expected a function (got ${value.show} instead)")
   }
 }
 
 class Vm {
   private val globals = mutable.HashMap[Int, Value[OpCode]]()
+
+  private val queues = {
+    val map = mutable.HashMap[Float, LinkedTransferQueue[Value[OpCode]]]()
+    map.put(Thread.currentThread().getId.toFloat, new LinkedTransferQueue[Value[OpCode]]())
+    map
+  }
 
   def run(instructions: Array[OpCode]): Value[OpCode] = {
     val loop = new VmLoop(instructions)
@@ -70,6 +77,10 @@ class Vm {
 
       case Pop => stack.pop()
 
+      case Op0(f) =>
+        val result = f()
+        stack.push(result)
+
       case Op1(f) =>
         val value = stack.pop()
         val result = f(value)
@@ -112,6 +123,49 @@ class Vm {
 
         callFunction(closure, givenArgs)
       }
+
+      case Fork =>
+        val closure = Vm.valueToClosure(stack.pop())
+        val thread = new Thread {
+          override def run(): Unit = {
+            val vm = new VmLoop(Array(
+              Push(closure),
+              Call(0),
+            ))
+            vm.run()
+          }
+        }
+
+        thread.setDaemon(true)
+        thread.start()
+        val id = thread.getId.toFloat
+        queues.put(id, new LinkedTransferQueue())
+        stack.push(id)
+
+      case Receive =>
+        val selfId = Thread.currentThread().getId.toFloat
+        val maybeQueue = queues.get(selfId)
+        maybeQueue match {
+          case None => throw new Exception(s"thread $selfId not found (in receive)")
+          case Some(queue) =>
+            val value = queue.take()
+            stack.push(value)
+        }
+
+      case Send =>
+        val valueToSend = stack.pop()
+        val id = stack.pop() match {
+          case Number(n) => n
+          case _ => throw new Exception("expected a number")
+        }
+        
+        val maybeQueue = queues.get(id)
+        maybeQueue match {
+          case None => throw new Exception(s"thread $id not found (in send)")
+          case Some(queue) =>
+            queue.transfer(valueToSend)
+            stack.push(Nil)
+        }
 
       case Call(argsGivenNumber) =>
         val value = stack.pop()

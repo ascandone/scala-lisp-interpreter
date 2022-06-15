@@ -100,6 +100,21 @@ class Compiler(vm: Vm = new Vm) {
           compile(lst)
           emitter.emit(Apply)
 
+        case Symbol("builtin/fork") :: f :: Nil =>
+          compile(f)
+          emitter.emit(Fork)
+
+        case Symbol("builtin/send") :: pid :: value :: Nil =>
+          compile(pid)
+          compile(value)
+          emitter.emit(Send)
+
+        case Symbol("builtin/receive") :: Nil =>
+          emitter.emit(Receive)
+
+        case Symbol("builtin/self") :: args => compileOp0(Self, args)
+
+
         case Symbol("builtin/add") :: args => compileOp2(Add, args)
         case Symbol("builtin/log") :: args => compileOp1(Log, args)
         case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)
@@ -109,6 +124,7 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/rest") :: args => compileOp1(Rest, args)
         case Symbol("builtin/is-nil") :: args => compileOp1(IsNil, args)
         case Symbol("builtin/sleep") :: args => compileOp1(Sleep, args)
+        case Symbol("builtin/panic") :: args => compileOp1(Panic, args)
         case Symbol("builtin/is-eq") :: args => compileOp2(IsEq, args)
         case Symbol("builtin/is-list") :: args => compileOp1(IsList, args)
 
@@ -205,6 +221,13 @@ class Compiler(vm: Vm = new Vm) {
       beginBranchTrue.fill(JumpIfNot)
       compile(branchFalse)
       beginBranchFalse.fill(Jump)
+    }
+
+    private def compileOp0(op: Op0Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+      case Nil =>
+        emitter.emit(Op0(op))
+
+      case _ => throw new Exception(s"Invalid arity (expected 0, got ${args.length}")
     }
 
     private def compileOp1(op: Op1Impl, args: scala.List[Value[OpCode]]): Unit = args match {
