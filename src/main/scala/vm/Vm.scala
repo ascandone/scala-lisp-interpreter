@@ -100,7 +100,7 @@ class Vm {
 
       case JumpIfNot(target) =>
         val value = stack.pop()
-        if (!value.toBool) {
+        if (!value) {
           frames.peek().ip = target
         }
 
@@ -141,7 +141,7 @@ class Vm {
       case IsEq => runOp2((x, y) => x == y)
 
       // TODO impl toBool
-      case Not => runOp1(a => !a.toBool)
+      case Not => runOp1(a => !a)
 
       case Cons => runOp2((head, tail) => tail match {
         case List(tail_) => List(head :: tail_)

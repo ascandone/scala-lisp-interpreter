@@ -11,6 +11,12 @@ object Value {
     Symbol("false")
   }
 
+  implicit def toBool[Op](value: Value[Op]): Boolean = value match {
+    case Symbol("false") => false
+    case List(scala.Nil) => false
+    case _ => true
+  }
+
   implicit def fromNumber[Op](n: Float): Value[Op] = Number(n)
 
   implicit def fromString[Op](s: java.lang.String): Value[Op] = String(s)
@@ -21,12 +27,6 @@ object Value {
 }
 
 sealed trait Value[+Op] {
-  def toBool: Boolean = this match {
-    case Symbol("false") => false
-    case List(scala.Nil) => false
-    case _ => true
-  }
-
   def show: java.lang.String = this match {
     case Symbol(name) => name
     case String(str) => s"\"$str\""
