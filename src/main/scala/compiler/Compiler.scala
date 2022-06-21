@@ -2,6 +2,7 @@ package compiler
 
 import value._
 import vm._
+import vm.opcode._
 
 import scala.collection.mutable
 

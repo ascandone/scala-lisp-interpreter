@@ -4,7 +4,7 @@ import org.scalatest.flatspec._
 import org.scalatest.matchers._
 import value._
 import value.parser.Parser
-import vm._
+import vm.opcode._
 
 class CompilerSpec extends AnyFlatSpec with should.Matchers {
 

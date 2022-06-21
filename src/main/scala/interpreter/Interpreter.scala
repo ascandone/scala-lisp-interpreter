@@ -4,6 +4,7 @@ import compiler.Compiler
 import value.Value
 import value.parser.Parser
 import vm._
+import vm.opcode.OpCode
 
 import scala.io.Source
 

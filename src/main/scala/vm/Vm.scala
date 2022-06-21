@@ -2,17 +2,12 @@ package vm
 
 import value.ArgumentsArity.ParsedArguments
 import value._
-import vm.mutable.ArrayStack
+import vm.opcode._
 
 import java.util.concurrent.LinkedTransferQueue
 import scala.collection.mutable
 
 object Vm {
-  def runOnce(instructions: Array[OpCode]): Value[OpCode] = {
-    val vm = new Vm
-    vm.run(instructions)
-  }
-
   private def valueToClosure(value: Value[OpCode]): Closure[OpCode] = value match {
     case fn@CompiledFunction(_, _) => Closure(
       freeVariables = Array(),
@@ -39,10 +34,10 @@ class Vm {
     loop.run()
   }
 
-  private class VmLoop(private var instructions: Array[OpCode]) {
-    private val stack = new ArrayStack[Value[OpCode]]()
+  private class VmLoop(private val instructions: Array[OpCode]) {
+    private val stack = new _root_.mutable.ArrayStack[Value[OpCode]]()
     private val frames = {
-      val stack = new ArrayStack[Frame]()
+      val stack = new _root_.mutable.ArrayStack[Frame]()
       val initialFrame = new Frame(
         closure = Closure(
           freeVariables = Array(),

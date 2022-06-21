@@ -1,4 +1,4 @@
-package vm.mutable
+package mutable
 
 import scala.reflect.ClassTag
 

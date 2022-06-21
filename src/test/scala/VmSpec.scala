@@ -2,12 +2,13 @@ import org.scalatest.flatspec._
 import org.scalatest.matchers._
 import value._
 import vm._
+import vm.opcode._
 
 class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "push numbers" in {
     val instructions: Array[OpCode] = Array(Push(42))
-    Vm.runOnce(instructions) should be(Number(42))
+    new Vm().run(instructions) should be(Number(42))
   }
 
   it should "pop values" in {
@@ -16,7 +17,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Push(20),
       Pop
     )
-    Vm.runOnce(instructions) should be(Number(10))
+    new Vm().run(instructions) should be(Number(10))
   }
 
   it should "execute Op.Op2" in {
@@ -26,7 +27,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Push(20),
       Add,
     )
-    Vm.runOnce(instructions) should be(Number(30))
+    new Vm().run(instructions) should be(Number(30))
   }
 
 
@@ -39,7 +40,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       /* 3 */
     )
 
-    Vm.runOnce(instructions) should be(Number(0))
+    new Vm().run(instructions) should be(Number(0))
   }
 
 
@@ -53,7 +54,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       /* 4 */
     )
 
-    Vm.runOnce(instructions) should be(Number(0))
+    new Vm().run(instructions) should be(Number(0))
   }
 
   it should "execute Op.JumpIfNot (true)" in {
@@ -66,7 +67,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       /* 4 */
     )
 
-    Vm.runOnce(instructions) should be(Number(1))
+    new Vm().run(instructions) should be(Number(1))
   }
 
   it should "execute Op.GetGlobal/SetGlobal" in {
@@ -78,7 +79,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       GetGlobal(0)
     )
 
-    Vm.runOnce(instructions) should be(Number(42))
+    new Vm().run(instructions) should be(Number(42))
   }
 
   it should "execute Op.Call with no args" in {
@@ -95,7 +96,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(0),
     )
 
-    Vm.runOnce(instructions) should be(Number(142))
+    new Vm().run(instructions) should be(Number(142))
   }
 
   it should "execute Op.Call with two args" in {
@@ -115,7 +116,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(2),
     )
 
-    Vm.runOnce(instructions) should be(Number(300))
+    new Vm().run(instructions) should be(Number(300))
   }
 
   it should "execute PushClosure" in {
@@ -147,7 +148,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(1),
     )
 
-    Vm.runOnce(instructions) should be(Number(300))
+    new Vm().run(instructions) should be(Number(300))
   }
 
   it should "should execute recursive function" in {
@@ -189,7 +190,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(1),
     )
 
-    Vm.runOnce(instructions) should be(Number(LIM + 1))
+    new Vm().run(instructions) should be(Number(LIM + 1))
   }
 
   it should "handle rest params" in {
@@ -209,7 +210,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(3),
     )
 
-    Vm.runOnce(instructions) should be(List.of(
+    new Vm().run(instructions) should be(List.of(
       Number(0),
       Number(1),
       Number(2),
@@ -233,7 +234,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       Call(1),
     )
 
-    Vm.runOnce(instructions) should be(List.of(
+    new Vm().run(instructions) should be(List.of(
       Number(0),
     ))
   }

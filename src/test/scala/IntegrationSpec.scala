@@ -2,7 +2,7 @@ import interpreter.Interpreter
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 import value._
-import vm.OpCode
+import vm.opcode.OpCode
 
 class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   behavior of "atomic values"

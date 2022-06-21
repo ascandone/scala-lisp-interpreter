@@ -1,4 +1,4 @@
-package vm
+package vm.opcode
 
 import value._
 
