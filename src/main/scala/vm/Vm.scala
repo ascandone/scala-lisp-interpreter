@@ -5,6 +5,7 @@ import value._
 import vm.opcode._
 
 import java.util.concurrent.LinkedTransferQueue
+import scala.annotation.tailrec
 import scala.collection.mutable
 
 object Vm {
@@ -49,22 +50,17 @@ class Vm {
       stack
     }
 
-    def run(): Value[OpCode] = {
-      while ( {
-        val currentFrame = frames.peek()
-        currentFrame.ip < currentFrame.closure.fn.instructions.length
-      }) {
-        val opCode = {
-          val currentFrame = frames.peek()
-          val opCode = frames.peek().closure.fn.instructions(currentFrame.ip)
-          currentFrame.ip += 1
-          opCode
-        }
-
+    @tailrec
+    final def run(): Value[OpCode] = {
+      val currentFrame = frames.peek()
+      if (currentFrame.ip < currentFrame.closure.fn.instructions.length) {
+        val opCode = currentFrame.closure.fn.instructions(currentFrame.ip)
+        currentFrame.ip += 1
         step(opCode)
+        run()
+      } else {
+        stack.peek()
       }
-
-      stack.peek()
     }
 
     private def runOp0(f: () => Value[OpCode]): Unit = {
