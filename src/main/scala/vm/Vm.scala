@@ -131,7 +131,6 @@ class Vm {
 
       case IsEq => execOp2((x, y) => x == y)
 
-      // TODO impl toBool
       case Not => execOp1(a => !a)
 
       case Cons => execOp2((head, tail) => tail match {
