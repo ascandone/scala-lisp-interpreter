@@ -1,5 +1,6 @@
 package vm
 
+import _root_.mutable.ArrayStack
 import value.ArgumentsArity.ParsedArguments
 import value._
 import vm.opcode._
@@ -36,25 +37,24 @@ class Vm {
   }
 
   private class VmLoop(private val instructions: Array[OpCode]) {
-    private val stack = new _root_.mutable.ArrayStack[Value[OpCode]]()
-    private val frames = {
-      val stack = new _root_.mutable.ArrayStack[Frame]()
-      val initialFrame = new Frame(
+    private val stack = new ArrayStack[Value[OpCode]]()
+    private val frames = ArrayStack(
+      new Frame(
         closure = Closure(
           freeVariables = Array(),
           fn = CompiledFunction(instructions)
         ),
         basePointer = 0,
       )
-      stack.push(initialFrame)
-      stack
-    }
+    )
 
     @tailrec
     final def run(): Value[OpCode] = {
       val currentFrame = frames.peek()
-      if (currentFrame.ip < currentFrame.closure.fn.instructions.length) {
-        val opCode = currentFrame.closure.fn.instructions(currentFrame.ip)
+      if (
+        currentFrame.ip < currentFrame.instructions.length
+      ) {
+        val opCode = currentFrame.instructions(currentFrame.ip)
         currentFrame.ip += 1
         step(opCode)
         run()
@@ -311,4 +311,6 @@ class Vm {
 
 private class Frame(val closure: Closure[OpCode], val basePointer: Int) {
   var ip = 0
+
+  def instructions: Array[OpCode] = closure.fn.instructions
 }
