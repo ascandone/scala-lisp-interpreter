@@ -56,7 +56,7 @@ class Vm {
       ) {
         val opCode = currentFrame.instructions(currentFrame.ip)
         currentFrame.ip += 1
-        step(opCode)
+        execute(opCode)
         run()
       } else {
         stack.peek()
@@ -81,7 +81,7 @@ class Vm {
       stack.push(result)
     }
 
-    private def step(opCode: OpCode): Unit = opCode match {
+    private def execute(opCode: OpCode): Unit = opCode match {
       case Push(value) => stack.push(value)
 
       case Pop => stack.pop()
