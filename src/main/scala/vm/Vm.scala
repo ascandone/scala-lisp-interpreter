@@ -119,7 +119,7 @@ class Vm {
       }
 
       case Add => execOp2((x, y) => (x, y) match {
-        case (Number(na), Number(nb)) => Number(na + nb)
+        case (Number(na), Number(nb)) => na + nb
         case _ => throw new Exception(s"Add error (expected numbers, got ${x.show} and ${y.show}")
       })
 
