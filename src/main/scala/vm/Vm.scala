@@ -98,11 +98,11 @@ class Vm {
       case SetGlobal(ident) =>
         val value = stack.pop()
         globals.put(ident, value)
-        stack.push(Value.nil)
+        stack.push(Nil)
 
       case GetGlobal(ident) => globals.get(ident) match {
         // Receiving `None` means that (def) was called inside a lambda not yet called
-        case None => stack.push(List.of())
+        case None => stack.push(Nil)
         case Some(value) => stack.push(value)
       }
 
