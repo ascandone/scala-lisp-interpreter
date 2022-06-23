@@ -38,7 +38,7 @@ sealed trait Value[+Op] {
       }
     case List(scala.Nil) => "nil"
     case List(values) => "(" + values.map(_.show).mkString(" ") + ")"
-    case CompiledFunction(_, _) => "#<Function>"
+    case Function(_, _) => "#<Function>"
     case Closure(_, _) => "#<Closure>"
   }
 }
@@ -55,14 +55,14 @@ object List {
   def of[Op](values: Value[Op]*): List[Op] = List(values.toList)
 }
 
-case class CompiledFunction[Op](
-                                 instructions: Array[Op],
-                                 arity: ArgumentsArity = ArgumentsArity(),
-                               ) extends Value[Op]
+case class Function[Op](
+                         instructions: Array[Op],
+                         arity: ArgumentsArity = ArgumentsArity(),
+                       ) extends Value[Op]
 
 case class Closure[Op](
                         freeVariables: Array[Value[Op]],
-                        fn: CompiledFunction[Op],
+                        fn: Function[Op],
                       ) extends Value[Op]
 
 case class ArgumentsArity(

@@ -84,7 +84,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "execute Op.Call with no args" in {
 
-    val fn = CompiledFunction[OpCode](instructions = Array(
+    val fn = Function[OpCode](instructions = Array(
       Push(100),
       Push(42),
       Add,
@@ -101,7 +101,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "execute Op.Call with two args" in {
 
-    val fn = CompiledFunction[OpCode](arity = ArgumentsArity(required = 2), instructions = Array(
+    val fn = Function[OpCode](arity = ArgumentsArity(required = 2), instructions = Array(
       Push(Value.nil),
       GetLocal(0),
       GetLocal(1),
@@ -121,7 +121,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "execute PushClosure" in {
     // a => b => a + b
-    val inner = CompiledFunction[OpCode](
+    val inner = Function[OpCode](
       arity = ArgumentsArity(required = 1),
       instructions = Array(
         GetFree(0),
@@ -131,7 +131,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
       )
     )
 
-    val outer = CompiledFunction[OpCode](
+    val outer = Function[OpCode](
       arity = ArgumentsArity(required = 1),
       instructions = Array(
         GetLocal(0),
@@ -163,7 +163,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
     val LIM = 4.toFloat
 
-    val fn = CompiledFunction[OpCode](
+    val fn = Function[OpCode](
       arity = ArgumentsArity(required = 1),
       instructions = Array(
         /* 00 */ GetLocal(0),
@@ -195,7 +195,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "handle rest params" in {
     // ((lambda (&rest xs) xs) 0 1 2)
-    val fn = CompiledFunction[OpCode](
+    val fn = Function[OpCode](
       arity = ArgumentsArity(rest = true),
       instructions = Array(
         GetLocal(0),
@@ -219,7 +219,7 @@ class VmSpec extends AnyFlatSpec with should.Matchers {
 
   it should "handle optional params" in {
     // ((lambda (&opt a b) (cons a b)) 0)
-    val fn = CompiledFunction[OpCode](
+    val fn = Function[OpCode](
       arity = ArgumentsArity(optionals = 2),
       instructions = Array(
         GetLocal(0),

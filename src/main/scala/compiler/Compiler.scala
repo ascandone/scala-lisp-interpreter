@@ -29,7 +29,7 @@ object Compiler {
 
 class Compiler(vm: Vm = new Vm) {
   private val symbolTable = new SymbolTable()
-  private val macros = new mutable.HashMap[java.lang.String, CompiledFunction[OpCode]]()
+  private val macros = new mutable.HashMap[java.lang.String, Function[OpCode]]()
 
   def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
     val block = List[OpCode](
@@ -47,7 +47,7 @@ class Compiler(vm: Vm = new Vm) {
     def collect(): Array[OpCode] = emitter.collect
 
     def compile(value: Value[OpCode]): Unit = value match {
-      case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | CompiledFunction(_, _) | Closure(_, _) =>
+      case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | Function(_, _) | Closure(_, _) =>
         emitter.emit(Push(value))
 
       case Symbol(name) => symbolTable.resolve(name) match {
@@ -186,7 +186,7 @@ class Compiler(vm: Vm = new Vm) {
       emitter.emit(Push(Nil))
     }
 
-    private def lookupMacro(value: Value[OpCode]): Option[CompiledFunction[OpCode]] = value match {
+    private def lookupMacro(value: Value[OpCode]): Option[Function[OpCode]] = value match {
       case Symbol(name) => macros get name
       case _ => None
     }
@@ -254,7 +254,7 @@ class Compiler(vm: Vm = new Vm) {
                                symbolTable: SymbolTable,
                                params: scala.List[Value[OpCode]],
                                body: Value[OpCode] = List.of()
-                             ): CompiledFunction[OpCode] = {
+                             ): Function[OpCode] = {
       val compiler = new CompilerLoop(symbolTable)
 
       val compiledParams = CompiledParams.compile(params.map {
@@ -275,7 +275,7 @@ class Compiler(vm: Vm = new Vm) {
       compiler.emitter.emit(Return)
       val instructions = compiler.collect()
 
-      CompiledFunction(
+      Function(
         instructions = instructions,
         arity = compiledParams.toArity,
       )

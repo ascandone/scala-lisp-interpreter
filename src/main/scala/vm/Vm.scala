@@ -11,7 +11,7 @@ import scala.collection.mutable
 
 object Vm {
   private def valueToClosure(value: Value[OpCode]): Closure[OpCode] = value match {
-    case fn@CompiledFunction(_, _) => Closure(
+    case fn@Function(_, _) => Closure(
       freeVariables = Array(),
       fn = fn,
     )
@@ -42,7 +42,7 @@ class Vm {
       new Frame(
         closure = Closure(
           freeVariables = Array(),
-          fn = CompiledFunction(instructions)
+          fn = Function(instructions)
         ),
         basePointer = 0,
       )

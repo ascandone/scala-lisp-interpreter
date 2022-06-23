@@ -26,7 +26,7 @@ case object Apply extends OpCode
 
 case object Return extends OpCode
 
-case class PushClosure(freeVariables: Int, fn: CompiledFunction[OpCode]) extends OpCode
+case class PushClosure(freeVariables: Int, fn: Function[OpCode]) extends OpCode
 
 case class GetFree(ident: Int) extends OpCode
 
