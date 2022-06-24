@@ -16,8 +16,6 @@ case class SetGlobal(name: Int) extends OpCode
 
 case class GetGlobal(name: Int) extends OpCode
 
-case class SetLocal(ident: Int) extends OpCode
-
 case class GetLocal(ident: Int) extends OpCode
 
 case class Call(passedArgs: Int) extends OpCode

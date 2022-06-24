@@ -244,12 +244,6 @@ class Vm {
         val retValue = stack.get(index)
         stack.push(retValue)
 
-      case SetLocal(ident) =>
-        // TODO test
-        val value = stack.peek()
-        val index = frames.peek().basePointer + ident
-        stack.set(index, value)
-
       case PushClosure(freeVariablesNum, fn) =>
         val freeVariables = new Array[Value[OpCode]](freeVariablesNum)
         for (i <- 0 until freeVariablesNum) {
