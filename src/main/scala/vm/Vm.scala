@@ -68,7 +68,7 @@ class Vm {
       stack.push(result)
     }
 
-    private def execOp1(f: (Value[OpCode]) => Value[OpCode]): Unit = {
+    private def execOp1(f: Value[OpCode] => Value[OpCode]): Unit = {
       val x = stack.pop()
       val result = f(x)
       stack.push(result)
@@ -106,17 +106,14 @@ class Vm {
         case Some(value) => stack.push(value)
       }
 
-      case Apply => {
+      case Apply =>
         val givenArgs = stack.pop() match {
           case List(lst) => lst
           // TODO better err
           case _ => throw new Exception("Expected a list")
         }
-
         val closure = Vm.valueToClosure(stack.pop())
-
         callFunction(closure, givenArgs)
-      }
 
       case Add => execOp2((x, y) => (x, y) match {
         case (Number(na), Number(nb)) => na + nb
@@ -161,10 +158,10 @@ class Vm {
       })
 
       case Sleep => execOp1({
-        case Number(nms) => {
+        case Number(nms) =>
           Thread.sleep(nms.toLong)
           Nil
-        }
+
         case _ => throw new Exception("Invalid sleep args")
       })
 
@@ -270,11 +267,12 @@ class Vm {
             })
             frames.peek().ip = 0
           } else {
+            val basePointer = stack.length()
             handleCallPush(parsedArgs)
 
             frames.push(new Frame(
               closure = closure,
-              basePointer = stack.length() - closure.fn.arity.size
+              basePointer = basePointer
             ))
           }
       }
