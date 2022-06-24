@@ -22,8 +22,6 @@ object Value {
   implicit def fromString[Op](s: java.lang.String): Value[Op] = String(s)
 
   implicit def fromList[Op](l: scala.List[Value[Op]]): Value[Op] = List(l)
-
-  def nil[Op]: Value[Op] = List()
 }
 
 sealed trait Value[+Op] {

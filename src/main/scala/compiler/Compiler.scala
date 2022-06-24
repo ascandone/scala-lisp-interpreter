@@ -198,7 +198,7 @@ class Compiler(vm: Vm = new Vm) {
     }
 
     private def compileBlock(block: scala.List[Value[OpCode]]): Unit = block match {
-      case Nil => emitter.emit(Push(Value.nil))
+      case Nil => emitter.emit(Push(Nil))
       case value :: Nil => compile(value)
       case _ => for ((value, index) <- block.zipWithIndex) {
         if (index != 0) {
@@ -211,8 +211,8 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileIf(
                            cond: Value[OpCode],
-                           branchTrue: Value[OpCode] = Value.nil,
-                           branchFalse: Value[OpCode] = Value.nil
+                           branchTrue: Value[OpCode] = Nil,
+                           branchFalse: Value[OpCode] = Nil
                          ): Unit = {
       compile(cond)
       val beginBranchTrue = emitter.placeholder()

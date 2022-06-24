@@ -23,7 +23,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
 
     testCompileAs("()",
       Array(
-        Push(Value.nil)
+        Push(Nil)
       )
     )
 
@@ -43,7 +43,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
   it should "compile empty do blocks" in {
     testCompileAs("(do)",
       Array(
-        Push(Value.nil)
+        Push(Nil)
       )
     )
   }

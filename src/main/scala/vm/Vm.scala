@@ -163,14 +163,14 @@ class Vm {
       case Sleep => execOp1({
         case Number(nms) => {
           Thread.sleep(nms.toLong)
-          Value.nil
+          Nil
         }
         case _ => throw new Exception("Invalid sleep args")
       })
 
       case Log => execOp1(x => {
         println(x.show)
-        Value.nil
+        Nil
       })
 
       case Panic => execOp1({
@@ -297,7 +297,7 @@ class Vm {
       }
 
       for (_ <- 0 until optionalsNotGiven) {
-        stack.push(Value.nil)
+        stack.push(Nil)
       }
 
       for (restArgs <- parsedArgs.rest) {
