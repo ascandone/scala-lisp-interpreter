@@ -242,11 +242,7 @@ class Vm {
         stack.push(retValue)
 
       case PushClosure(freeVariablesNum, fn) =>
-        val freeVariables = new Array[Value[OpCode]](freeVariablesNum)
-        for (i <- 0 until freeVariablesNum) {
-          val value = stack.pop()
-          freeVariables(i) = value
-        }
+        val freeVariables = (0 until freeVariablesNum).map(_ => stack.pop()).toArray
         stack.push(Closure(freeVariables, fn))
 
       case GetFree(ident) =>
