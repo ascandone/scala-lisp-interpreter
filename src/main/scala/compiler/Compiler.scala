@@ -20,11 +20,6 @@ object Compiler {
 
   // Compilation level
   val DEF_MACRO = "defmacro"
-
-  def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
-    val compiler = new Compiler()
-    compiler.compile(values)
-  }
 }
 
 class Compiler(vm: Vm = new Vm) {
