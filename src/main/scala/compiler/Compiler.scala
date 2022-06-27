@@ -60,9 +60,9 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol(Compiler.DO) :: block => compileBlock(block)
 
         case Symbol(Compiler.IF) :: args => args match {
-          case scala.List(cond) => compileIf(cond)
-          case scala.List(cond, a) => compileIf(cond, a)
-          case scala.List(cond, a, b) => compileIf(cond, a, b)
+          case cond :: Nil => compileIf(cond)
+          case cond :: a :: Nil => compileIf(cond, a)
+          case cond :: a :: b :: Nil => compileIf(cond, a, b)
           case _ => throw new Exception("Invalid `if` arity")
         }
 

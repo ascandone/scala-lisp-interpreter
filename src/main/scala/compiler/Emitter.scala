@@ -21,7 +21,7 @@ private class Emitter {
   class Placeholder {
     private val index = opcodes.length
 
-    def fill(opCode: (Int) => OpCode): Unit = {
+    def fill(opCode: Int => OpCode): Unit = {
       opcodes(index) = opCode(opcodes.length)
     }
   }
