@@ -281,7 +281,9 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       s"""
       (def f (lambda* (n)
         (if (builtin/not (builtin/greater-than n $LIM))
-          (f (builtin/add 1 n))
+          (if (builtin/not true)
+            100
+            (f (builtin/add 1 n)))
           n)))
 
       (f 0)
