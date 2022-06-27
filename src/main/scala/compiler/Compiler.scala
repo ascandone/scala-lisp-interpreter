@@ -55,7 +55,7 @@ class Compiler(vm: Vm = new Vm) {
       }
 
       case List(forms) => forms match {
-        case scala.Nil => emitter.emit(Push(value))
+        case Nil => emitter.emit(Push(value))
 
         case Symbol(Compiler.DO) :: block => compileBlock(block)
 
