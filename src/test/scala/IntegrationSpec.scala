@@ -274,6 +274,20 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       """, LIM + 1)
   }
 
+  it should "allow simple recursion with swapped if branches" in {
+    val LIM = 2000
+
+    expectVmToEvalAs(
+      s"""
+      (def f (lambda* (n)
+        (if (builtin/not (builtin/greater-than n $LIM))
+          (f (builtin/add 1 n))
+          n)))
+
+      (f 0)
+      """, LIM + 1)
+  }
+
   it should "allow simple recursion with two params" in {
     val LIM = 1500
 
