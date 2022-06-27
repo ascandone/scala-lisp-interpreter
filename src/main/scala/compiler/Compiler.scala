@@ -68,8 +68,8 @@ class Compiler(vm: Vm = new Vm) {
 
         case Symbol(Compiler.DEF) :: args => args match {
           case Symbol(name) :: args2 => args2 match {
-            case scala.Nil => compileDef(name)
-            case value :: scala.Nil => compileDef(name, value)
+            case Nil => compileDef(name)
+            case value :: Nil => compileDef(name, value)
             case _ => throw new Exception("Invalid `def` arity")
           }
 
