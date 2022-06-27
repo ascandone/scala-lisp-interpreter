@@ -117,7 +117,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
       /* 05 */ Push(20),
       /* 06 */ Add,
       /* 07 */ Jump(10),
-      /* 08 */ Push(List.of()), // else branch
+      /* 08 */ Push(Nil), // else branch
       /* 09 */ Not, // else branch
       /* 10 */
     )
