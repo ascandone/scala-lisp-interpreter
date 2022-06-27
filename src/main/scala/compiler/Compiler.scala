@@ -136,7 +136,7 @@ class Compiler(vm: Vm = new Vm) {
           emitter.emit(Call(args.length))
       }
 
-    private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode] = List.of()): Unit = {
+    private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode] = Nil): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
 
@@ -159,7 +159,7 @@ class Compiler(vm: Vm = new Vm) {
       }
     }
 
-    private def compileMacro(name: java.lang.String, params: scala.List[Value[OpCode]], body: Value[OpCode] = List.of()): Unit = {
+    private def compileMacro(name: java.lang.String, params: scala.List[Value[OpCode]], body: Value[OpCode] = Nil): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
       macros.put(name, fn)
@@ -171,7 +171,7 @@ class Compiler(vm: Vm = new Vm) {
       case _ => None
     }
 
-    private def compileDef(name: java.lang.String, value: Value[OpCode] = List.of()): Unit = {
+    private def compileDef(name: java.lang.String, value: Value[OpCode] = Nil): Unit = {
       val symbol = symbolTable.define(name, forceGlobal = true)
       compile(value)
       emitter.emit(SetGlobal(symbol.index))
@@ -233,7 +233,7 @@ class Compiler(vm: Vm = new Vm) {
     private def compileLambda(
                                symbolTable: SymbolTable,
                                params: scala.List[Value[OpCode]],
-                               body: Value[OpCode] = List.of()
+                               body: Value[OpCode] = Nil
                              ): Function[OpCode] = {
       val compiler = new CompilerLoop(symbolTable)
 
