@@ -227,7 +227,7 @@ class Compiler(vm: Vm = new Vm) {
     }
 
     private def compileOp1(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
-      case scala.List(x) =>
+      case x :: Nil =>
         compile(x)
         emitter.emit(op)
 
@@ -235,7 +235,7 @@ class Compiler(vm: Vm = new Vm) {
     }
 
     private def compileOp2(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
-      case scala.List(x, y) =>
+      case x :: y :: Nil =>
         compile(x)
         compile(y)
         emitter.emit(op)
