@@ -11,22 +11,20 @@ object Value {
     Symbol("false")
   }
 
-  implicit def fromNumber[Op](n: Float): Value[Op] = Number(n)
-
-  implicit def fromString[Op](s: java.lang.String): Value[Op] = String(s)
-
-  implicit def fromList[Op](l: scala.List[Value[Op]]): Value[Op] = List(l)
-
-  def nil[Op]: Value[Op] = List()
-}
-
-sealed trait Value[+Op] {
-  def toBool: Boolean = this match {
+  implicit def toBool[Op](value: Value[Op]): Boolean = value match {
     case Symbol("false") => false
     case List(scala.Nil) => false
     case _ => true
   }
 
+  implicit def fromNumber[Op](n: Float): Value[Op] = Number(n)
+
+  implicit def fromString[Op](s: java.lang.String): Value[Op] = String(s)
+
+  implicit def fromList[Op](l: scala.List[Value[Op]]): Value[Op] = List(l)
+}
+
+sealed trait Value[+Op] {
   def show: java.lang.String = this match {
     case Symbol(name) => name
     case String(str) => s"\"$str\""
@@ -38,7 +36,7 @@ sealed trait Value[+Op] {
       }
     case List(scala.Nil) => "nil"
     case List(values) => "(" + values.map(_.show).mkString(" ") + ")"
-    case CompiledFunction(_, _) => "#<Function>"
+    case Function(_, _) => "#<Function>"
     case Closure(_, _) => "#<Closure>"
   }
 }
@@ -49,20 +47,20 @@ case class String[+Op](value: java.lang.String) extends Value[Op]
 
 case class Symbol[+Op](value: java.lang.String) extends Value[Op]
 
-case class List[+Op](value: scala.List[Value[Op]] = scala.List.empty) extends Value[Op]
+case class List[+Op](value: scala.List[Value[Op]] = Nil) extends Value[Op]
 
 object List {
   def of[Op](values: Value[Op]*): List[Op] = List(values.toList)
 }
 
-case class CompiledFunction[Op](
-                                 instructions: Array[Op],
-                                 arity: ArgumentsArity = ArgumentsArity(),
-                               ) extends Value[Op]
+case class Function[Op](
+                         instructions: Array[Op],
+                         arity: ArgumentsArity = ArgumentsArity(),
+                       ) extends Value[Op]
 
 case class Closure[Op](
                         freeVariables: Array[Value[Op]],
-                        fn: CompiledFunction[Op],
+                        fn: Function[Op],
                       ) extends Value[Op]
 
 case class ArgumentsArity(

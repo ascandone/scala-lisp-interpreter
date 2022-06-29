@@ -2,7 +2,7 @@ import interpreter.Interpreter
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 import value._
-import vm.OpCode
+import vm.opcode.OpCode
 
 class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   behavior of "atomic values"
@@ -261,7 +261,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
   behavior of "tail call optimization"
   it should "allow simple recursion" in {
-    val LIM = 1_000_000
+    val LIM = 1500
 
     expectVmToEvalAs(
       s"""
@@ -275,7 +275,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "allow simple recursion with two params" in {
-    val LIM = 4000
+    val LIM = 1500
 
     expectVmToEvalAs(
       s"""
@@ -429,6 +429,7 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("`,42", 42)
     expectVmToEvalAs("(def x 42) `,x", 42)
     expectVmToEvalAs("(def x 42) `(a ,x)", List.of(Symbol("a"), 42))
+    expectVmToEvalAs("(def x 42) `(a (y ,x))", List.of(Symbol("a"), List.of(Symbol("y"), 42)))
   }
 
   it should "handle unquote splicing" in {

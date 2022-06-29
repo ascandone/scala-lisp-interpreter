@@ -1,6 +1,16 @@
-package vm.mutable
+package mutable
 
 import scala.reflect.ClassTag
+
+object ArrayStack {
+  def apply[A: ClassTag](args: A*): ArrayStack[A] = {
+    val stack = new ArrayStack[A]()
+    for (arg <- args) {
+      stack.push(arg)
+    }
+    stack
+  }
+}
 
 class ArrayStack[A: ClassTag](private var size: Int = 1024) {
   private val array = new Array[A](size)

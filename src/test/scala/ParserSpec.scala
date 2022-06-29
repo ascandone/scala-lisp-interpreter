@@ -22,9 +22,11 @@ class ParserSpec extends AnyFlatSpec with should.Matchers {
       """
             a ; comment
             b
+            ; another comment
+            c
         """
     ).get should be(scala.List(
-      Symbol("a"), Symbol("b")
+      Symbol("a"), Symbol("b"), Symbol("c")
     ))
   }
 

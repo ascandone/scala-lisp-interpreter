@@ -1,6 +1,6 @@
 package compiler
 
-import vm.OpCode
+import vm.opcode._
 
 import scala.collection.mutable.ArrayBuffer
 

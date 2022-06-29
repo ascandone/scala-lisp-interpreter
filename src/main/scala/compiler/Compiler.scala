@@ -2,6 +2,7 @@ package compiler
 
 import value._
 import vm._
+import vm.opcode._
 
 import scala.collection.mutable
 
@@ -19,16 +20,11 @@ object Compiler {
 
   // Compilation level
   val DEF_MACRO = "defmacro"
-
-  def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
-    val compiler = new Compiler()
-    compiler.compile(values)
-  }
 }
 
 class Compiler(vm: Vm = new Vm) {
   private val symbolTable = new SymbolTable()
-  private val macros = new mutable.HashMap[java.lang.String, CompiledFunction[OpCode]]()
+  private val macros = new mutable.HashMap[java.lang.String, Function[OpCode]]()
 
   def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
     val block = List[OpCode](
@@ -46,7 +42,7 @@ class Compiler(vm: Vm = new Vm) {
     def collect(): Array[OpCode] = emitter.collect
 
     def compile(value: Value[OpCode]): Unit = value match {
-      case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | CompiledFunction(_, _) | Closure(_, _) =>
+      case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | Function(_, _) | Closure(_, _) =>
         emitter.emit(Push(value))
 
       case Symbol(name) => symbolTable.resolve(name) match {
@@ -100,6 +96,21 @@ class Compiler(vm: Vm = new Vm) {
           compile(lst)
           emitter.emit(Apply)
 
+        case Symbol("builtin/fork") :: f :: Nil =>
+          compile(f)
+          emitter.emit(Fork)
+
+        case Symbol("builtin/send") :: pid :: value :: Nil =>
+          compile(pid)
+          compile(value)
+          emitter.emit(Send)
+
+        case Symbol("builtin/receive") :: Nil =>
+          emitter.emit(Receive)
+
+        case Symbol("builtin/self") :: args => compileOp0(Self, args)
+
+
         case Symbol("builtin/add") :: args => compileOp2(Add, args)
         case Symbol("builtin/log") :: args => compileOp1(Log, args)
         case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)
@@ -109,6 +120,7 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/rest") :: args => compileOp1(Rest, args)
         case Symbol("builtin/is-nil") :: args => compileOp1(IsNil, args)
         case Symbol("builtin/sleep") :: args => compileOp1(Sleep, args)
+        case Symbol("builtin/panic") :: args => compileOp1(Panic, args)
         case Symbol("builtin/is-eq") :: args => compileOp2(IsEq, args)
         case Symbol("builtin/is-list") :: args => compileOp1(IsList, args)
 
@@ -169,7 +181,7 @@ class Compiler(vm: Vm = new Vm) {
       emitter.emit(Push(Nil))
     }
 
-    private def lookupMacro(value: Value[OpCode]): Option[CompiledFunction[OpCode]] = value match {
+    private def lookupMacro(value: Value[OpCode]): Option[Function[OpCode]] = value match {
       case Symbol(name) => macros get name
       case _ => None
     }
@@ -181,7 +193,7 @@ class Compiler(vm: Vm = new Vm) {
     }
 
     private def compileBlock(block: scala.List[Value[OpCode]]): Unit = block match {
-      case Nil => emitter.emit(Push(Value.nil))
+      case Nil => emitter.emit(Push(Nil))
       case value :: Nil => compile(value)
       case _ => for ((value, index) <- block.zipWithIndex) {
         if (index != 0) {
@@ -194,8 +206,8 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileIf(
                            cond: Value[OpCode],
-                           branchTrue: Value[OpCode] = Value.nil,
-                           branchFalse: Value[OpCode] = Value.nil
+                           branchTrue: Value[OpCode] = Nil,
+                           branchFalse: Value[OpCode] = Nil
                          ): Unit = {
       compile(cond)
       val beginBranchTrue = emitter.placeholder()
@@ -207,22 +219,29 @@ class Compiler(vm: Vm = new Vm) {
       beginBranchFalse.fill(Jump)
     }
 
-    private def compileOp1(op: Op1Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+    private def compileOp0(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
+      case Nil =>
+        emitter.emit(op)
+
+      case _ => throw new Exception(s"Invalid arity (expected 0, got ${args.length}")
+    }
+
+    private def compileOp1(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case scala.List(x) =>
         compile(x)
-        emitter.emit(Op1(op))
+        emitter.emit(op)
 
       case _ => throw new Exception(s"Invalid arity (expected 1, got ${args.length}")
     }
 
-    private def compileOp2(op: Op2Impl, args: scala.List[Value[OpCode]]): Unit = args match {
+    private def compileOp2(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case scala.List(x, y) =>
         compile(x)
         compile(y)
-        emitter.emit(Op2(op))
-
+        emitter.emit(op)
       case _ => throw new Exception(s"Invalid arity (expected 2, got ${args.length})")
     }
+
   }
 
   private object CompilerLoop {
@@ -230,7 +249,7 @@ class Compiler(vm: Vm = new Vm) {
                                symbolTable: SymbolTable,
                                params: scala.List[Value[OpCode]],
                                body: Value[OpCode] = List.of()
-                             ): CompiledFunction[OpCode] = {
+                             ): Function[OpCode] = {
       val compiler = new CompilerLoop(symbolTable)
 
       val compiledParams = CompiledParams.compile(params.map {
@@ -251,7 +270,7 @@ class Compiler(vm: Vm = new Vm) {
       compiler.emitter.emit(Return)
       val instructions = compiler.collect()
 
-      CompiledFunction(
+      Function(
         instructions = instructions,
         arity = compiledParams.toArity,
       )
