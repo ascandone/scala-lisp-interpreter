@@ -55,21 +55,21 @@ class Compiler(vm: Vm = new Vm) {
       }
 
       case List(forms) => forms match {
-        case scala.Nil => emitter.emit(Push(value))
+        case Nil => emitter.emit(Push(value))
 
         case Symbol(Compiler.DO) :: block => compileBlock(block)
 
         case Symbol(Compiler.IF) :: args => args match {
-          case scala.List(cond) => compileIf(cond)
-          case scala.List(cond, a) => compileIf(cond, a)
-          case scala.List(cond, a, b) => compileIf(cond, a, b)
+          case cond :: Nil => compileIf(cond)
+          case cond :: a :: Nil => compileIf(cond, a)
+          case cond :: a :: b :: Nil => compileIf(cond, a, b)
           case _ => throw new Exception("Invalid `if` arity")
         }
 
         case Symbol(Compiler.DEF) :: args => args match {
           case Symbol(name) :: args2 => args2 match {
-            case scala.Nil => compileDef(name)
-            case value :: scala.Nil => compileDef(name, value)
+            case Nil => compileDef(name)
+            case value :: Nil => compileDef(name, value)
             case _ => throw new Exception("Invalid `def` arity")
           }
 
@@ -91,26 +91,11 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw new Exception("Invalid `quote` arguments")
         }
 
-        case Symbol("builtin/apply") :: f :: lst :: Nil =>
-          compile(f)
-          compile(lst)
-          emitter.emit(Apply)
-
-        case Symbol("builtin/fork") :: f :: Nil =>
-          compile(f)
-          emitter.emit(Fork)
-
-        case Symbol("builtin/send") :: pid :: value :: Nil =>
-          compile(pid)
-          compile(value)
-          emitter.emit(Send)
-
-        case Symbol("builtin/receive") :: Nil =>
-          emitter.emit(Receive)
-
+        case Symbol("builtin/apply") :: args => compileOp2(Apply, args)
+        case Symbol("builtin/fork") :: args => compileOp1(Fork, args)
+        case Symbol("builtin/send") :: args => compileOp2(Send, args)
+        case Symbol("builtin/receive") :: args => compileOp0(Receive, args)
         case Symbol("builtin/self") :: args => compileOp0(Self, args)
-
-
         case Symbol("builtin/add") :: args => compileOp2(Add, args)
         case Symbol("builtin/log") :: args => compileOp1(Log, args)
         case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)
@@ -151,7 +136,7 @@ class Compiler(vm: Vm = new Vm) {
           emitter.emit(Call(args.length))
       }
 
-    private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode] = List.of()): Unit = {
+    private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode] = Nil): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
 
@@ -174,7 +159,7 @@ class Compiler(vm: Vm = new Vm) {
       }
     }
 
-    private def compileMacro(name: java.lang.String, params: scala.List[Value[OpCode]], body: Value[OpCode] = List.of()): Unit = {
+    private def compileMacro(name: java.lang.String, params: scala.List[Value[OpCode]], body: Value[OpCode] = Nil): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
       macros.put(name, fn)
@@ -186,7 +171,7 @@ class Compiler(vm: Vm = new Vm) {
       case _ => None
     }
 
-    private def compileDef(name: java.lang.String, value: Value[OpCode] = List.of()): Unit = {
+    private def compileDef(name: java.lang.String, value: Value[OpCode] = Nil): Unit = {
       val symbol = symbolTable.define(name, forceGlobal = true)
       compile(value)
       emitter.emit(SetGlobal(symbol.index))
@@ -227,7 +212,7 @@ class Compiler(vm: Vm = new Vm) {
     }
 
     private def compileOp1(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
-      case scala.List(x) =>
+      case x :: Nil =>
         compile(x)
         emitter.emit(op)
 
@@ -235,7 +220,7 @@ class Compiler(vm: Vm = new Vm) {
     }
 
     private def compileOp2(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
-      case scala.List(x, y) =>
+      case x :: y :: Nil =>
         compile(x)
         compile(y)
         emitter.emit(op)
@@ -248,7 +233,7 @@ class Compiler(vm: Vm = new Vm) {
     private def compileLambda(
                                symbolTable: SymbolTable,
                                params: scala.List[Value[OpCode]],
-                               body: Value[OpCode] = List.of()
+                               body: Value[OpCode] = Nil
                              ): Function[OpCode] = {
       val compiler = new CompilerLoop(symbolTable)
 

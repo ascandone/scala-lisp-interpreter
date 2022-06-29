@@ -11,19 +11,19 @@ object Local extends Scope
 object Free extends Scope
 
 object SymbolTable {
-  case class Symbol(
-                     name: java.lang.String,
-                     scope: Scope,
-                     index: Int
-                   )
+  case class Identifier(
+                         name: java.lang.String,
+                         scope: Scope,
+                         index: Int
+                       )
 }
 
 class SymbolTable(val outer: Option[SymbolTable] = None) {
-  val freeSymbols = new mutable.ArrayBuffer[SymbolTable.Symbol]()
-  private val store = new mutable.HashMap[java.lang.String, SymbolTable.Symbol]()
+  val freeSymbols = new mutable.ArrayBuffer[SymbolTable.Identifier]()
+  private val store = new mutable.HashMap[java.lang.String, SymbolTable.Identifier]()
   private var numDefinitions = 0
 
-  def define(name: java.lang.String, forceGlobal: Boolean = false): SymbolTable.Symbol = {
+  def define(name: java.lang.String, forceGlobal: Boolean = false): SymbolTable.Identifier = {
     if (forceGlobal) {
       outer match {
         case None => define(name, forceGlobal = false)
@@ -31,7 +31,7 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
       }
     } else {
       // TODO use store.size instead of numDefinitions
-      val symbol = SymbolTable.Symbol(
+      val symbol = SymbolTable.Identifier(
         name = name,
         index = numDefinitions,
         scope = outer match {
@@ -47,12 +47,12 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
     }
   }
 
-  def resolve(name: java.lang.String): Option[SymbolTable.Symbol] = store.get(name).orElse {
+  def resolve(name: java.lang.String): Option[SymbolTable.Identifier] = store.get(name).orElse {
     outer.flatMap(_.resolve(name)).map(resolvedSymbol => resolvedSymbol.scope match {
       case Global => resolvedSymbol
       case Local | Free => {
         val index = freeSymbols.length
-        val symbol = SymbolTable.Symbol(
+        val symbol = SymbolTable.Identifier(
           name = name,
           scope = Free,
           index = index

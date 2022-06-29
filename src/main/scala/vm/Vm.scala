@@ -250,6 +250,14 @@ class Vm {
         stack.push(value)
     }
 
+    @tailrec
+    private def isTailCall(closure: Closure[OpCode], ip: Int): Boolean =
+      closure.fn.instructions(ip) match {
+        case Return => true
+        case Jump(target) => isTailCall(closure, target)
+        case _ => false
+      }
+
     private def callFunction(closure: Closure[OpCode], givenArgs: scala.List[Value[OpCode]]): Unit =
       closure.fn.arity parse givenArgs match {
         // TODO better error
@@ -257,7 +265,9 @@ class Vm {
         case Left(ArgumentsArity.TooManyArgs(extra)) => throw new Exception(s"Arity error (got $extra more)")
         case Right(parsedArgs) =>
 
-          if (frames.peek().closure.fn == closure.fn && closure.fn.instructions(frames.peek().ip) == Return) {
+          if (
+            frames.peek().closure.fn == closure.fn && isTailCall(closure, frames.peek().ip)
+          ) {
             stack.withPointer(frames.peek().basePointer, {
               handleCallPush(parsedArgs)
             })

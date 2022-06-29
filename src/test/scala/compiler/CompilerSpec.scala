@@ -53,6 +53,16 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
     )
   }
 
+  it should "compile quote expressions" in {
+    "(quote abc)".shouldCompileAs(
+      Push(Symbol("abc"))
+    )
+
+    "(quote (1 2 3))".shouldCompileAs(
+      Push(List.of(1, 2, 3))
+    )
+  }
+
   it should "treat multiple values as a do block" in {
     "1 2 3".shouldCompileAs(
       Push(1),
@@ -107,7 +117,7 @@ class CompilerSpec extends AnyFlatSpec with should.Matchers {
       /* 05 */ Push(20),
       /* 06 */ Add,
       /* 07 */ Jump(10),
-      /* 08 */ Push(List.of()), // else branch
+      /* 08 */ Push(Nil), // else branch
       /* 09 */ Not, // else branch
       /* 10 */
     )

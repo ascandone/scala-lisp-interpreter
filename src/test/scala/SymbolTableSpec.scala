@@ -7,14 +7,14 @@ class SymbolTableSpec extends AnyFlatSpec with should.Matchers {
     val global = new SymbolTable()
 
     val a = global.define("a")
-    a should be(new SymbolTable.Symbol(
+    a should be(new SymbolTable.Identifier(
       index = 0,
       name = "a",
       scope = Global
     ))
 
     val b = global.define("b")
-    b should be(new SymbolTable.Symbol(
+    b should be(new SymbolTable.Identifier(
       index = 1,
       name = "b",
       scope = Global
@@ -95,7 +95,7 @@ class SymbolTableSpec extends AnyFlatSpec with should.Matchers {
 
   def expectResolveAs(table: SymbolTable, data: (java.lang.String, Int, Scope)): Unit = {
     val (name, index, scope) = data
-    table.resolve(name) should be(Some(SymbolTable.Symbol(
+    table.resolve(name) should be(Some(SymbolTable.Identifier(
       index = index,
       name = name,
       scope = scope
