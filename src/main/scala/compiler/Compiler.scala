@@ -23,7 +23,7 @@ object Compiler {
 }
 
 class Compiler(vm: Vm = new Vm) {
-  private val symbolTable = new SymbolTable()
+  private val topLevelSymbolTable = new SymbolTable()
   private val macros = new mutable.HashMap[java.lang.String, Function[OpCode]]()
 
   def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
@@ -36,7 +36,7 @@ class Compiler(vm: Vm = new Vm) {
     compiler.collect()
   }
 
-  private class CompilerLoop(val symbolTable: SymbolTable = symbolTable) {
+  private class CompilerLoop(val symbolTable: SymbolTable = topLevelSymbolTable) {
     private val emitter = new Emitter()
 
     def collect(): Array[OpCode] = emitter.collect

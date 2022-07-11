@@ -5,6 +5,7 @@ import org.scalatest.matchers._
 import value._
 import value.parser.Parser
 import vm.opcode._
+
 import scala.language.implicitConversions
 
 class CompilerSpec extends AnyFlatSpec with should.Matchers {
