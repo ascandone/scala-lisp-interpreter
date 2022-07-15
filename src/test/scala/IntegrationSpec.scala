@@ -469,6 +469,57 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
         """, List.of("init", "a", "b"))
   }
 
+  behavior of "and macro"
+  it should "return true when no args are passed" in {
+    expectVmToEvalAs("(and)", true)
+  }
+
+  it should "return the value when only one arg is passed" in {
+    expectVmToEvalAs("(and true)", true)
+    expectVmToEvalAs("(and false)", false)
+    expectVmToEvalAs("(and 42)", 42)
+  }
+
+  it should "work with multiple args" in {
+    expectVmToEvalAs("(and true true)", true)
+    expectVmToEvalAs("(and true false)", false)
+    expectVmToEvalAs("(and false true)", false)
+    expectVmToEvalAs("(and false false)", false)
+    expectVmToEvalAs("(and true true false)", false)
+    expectVmToEvalAs("(and true true true)", true)
+  }
+
+  it should "perform short-circuit evaluation with multiple args" in {
+    expectVmToEvalAs("(and false (builtin/panic \"panic\"))", false)
+    expectVmToEvalAs("(and true true false (builtin/panic \"panic\"))", false)
+  }
+
+  behavior of "or macro"
+  it should "return true when no args are passed" in {
+    expectVmToEvalAs("(or)", true)
+  }
+
+  it should "return the value when only one arg is passed" in {
+    expectVmToEvalAs("(or true)", true)
+    expectVmToEvalAs("(or false)", false)
+    expectVmToEvalAs("(or 42)", 42)
+  }
+
+  it should "work with multiple args" in {
+    expectVmToEvalAs("(or true true)", true)
+    expectVmToEvalAs("(or true false)", true)
+    expectVmToEvalAs("(or false true)", true)
+    expectVmToEvalAs("(or false false)", false)
+    expectVmToEvalAs("(or false false false)", false)
+    expectVmToEvalAs("(or true true false)", true)
+    expectVmToEvalAs("(or true true true)", true)
+  }
+
+  it should "perform short-circuit evaluation with multiple args" in {
+    expectVmToEvalAs("(or true (builtin/panic \"panic\"))", true)
+    expectVmToEvalAs("(or false false true (builtin/panic \"panic\"))", true)
+  }
+
   def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
     val result = Interpreter.parseRun(str, loadPrelude = true)
     result should be(expected)

@@ -9,6 +9,9 @@
   (list 'def name
     (builtin/cons 'lambda (builtin/cons params body))))
 
+(defun gensym ()
+  (builtin/gensym))
+
 (defun + (a b)
   (builtin/add a b))
 
@@ -86,8 +89,8 @@
       (cons 'concat (map body backquote-helper)))
     (list 'quote body)))
 
-(defmacro let1 (binding body)
-    `((lambda (,(first binding)) ,body)
+(defmacro let1 (binding &rest body)
+    `((lambda (,(first binding)) ,@body)
         ,(second binding)))
 
 (defmacro let (pairs body)
@@ -99,3 +102,25 @@
 
 (defmacro fork (&rest body)
   `(builtin/fork (lambda () ,@body)))
+
+(defmacro and (&rest clauses)
+  (if (nil? clauses)
+    true
+    (let1 (s (gensym))
+      `(let1 (,s ,(first clauses))
+          (if ,s
+            ,(if (nil? (rest clauses))
+                s
+                `(and ,@(rest clauses)))
+            ,s)))))
+
+(defmacro or (&rest clauses)
+  (if (nil? clauses)
+    true
+    (let1 (s (gensym))
+      `(let1 (,s ,(first clauses))
+          (if ,s
+            ,s
+            ,(if (nil? (rest clauses))
+                s
+                `(or ,@(rest clauses))))))))
