@@ -124,3 +124,13 @@
             ,(if (nil? (rest clauses))
                 s
                 `(or ,@(rest clauses))))))))
+
+(defmacro -> (x &rest forms)
+  (do (log (list x forms))
+  (if (nil? forms)
+    x
+    `(->    
+      ,(let1 (form (first forms)) ; es. (+ 10 20)
+        (cons (first form) (cons x (rest form))))
+        ; es. (cons + (cons x args)) => (+ x 10 20)
+      ,@(rest forms)))))

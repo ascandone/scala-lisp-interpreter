@@ -520,6 +520,24 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     expectVmToEvalAs("(or false false true (builtin/panic \"panic\"))", true)
   }
 
+  behavior of "-> macro"
+  it should "return the first argument when no ops are passed" in {
+    expectVmToEvalAs("(-> 42)", 42)
+  }
+
+  it should "apply the first function" in {
+    expectVmToEvalAs("(-> 42 (+ 100))", 142)
+  }
+
+  it should "apply apply the function in the right order" in {
+    expectVmToEvalAs("(-> 0 (> 100))", false)
+    expectVmToEvalAs("(-> 100 (> 0))", true)
+  }
+
+  it should "handle multiple forms" in {
+    expectVmToEvalAs("(-> 100 (+ 10) (+ 20) (+ 30))", 100 + 10 + 20 + 30)
+  }
+
   def expectVmToEvalAs(str: java.lang.String, expected: Value[OpCode]): Unit = {
     val result = Interpreter.parseRun(str, loadPrelude = true)
     result should be(expected)
