@@ -91,6 +91,7 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw new Exception("Invalid `quote` arguments")
         }
 
+        case Symbol("builtin/gensym") :: args => compileOp0(GenSym, args)
         case Symbol("builtin/apply") :: args => compileOp2(Apply, args)
         case Symbol("builtin/fork") :: args => compileOp1(Fork, args)
         case Symbol("builtin/send") :: args => compileOp2(Send, args)

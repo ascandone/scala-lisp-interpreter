@@ -59,3 +59,5 @@ case object Receive extends OpCode
 case object Send extends OpCode
 
 case object Self extends OpCode
+
+case object GenSym extends OpCode

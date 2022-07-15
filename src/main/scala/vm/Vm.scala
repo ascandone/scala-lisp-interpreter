@@ -24,6 +24,7 @@ object Vm {
 
 class Vm {
   private val globals = mutable.HashMap[Int, Value[OpCode]]()
+  private var genSymCount = 0
 
   private val queues = {
     val map = mutable.HashMap[Float, LinkedTransferQueue[Value[OpCode]]]()
@@ -138,13 +139,13 @@ class Vm {
       case First => execOp1 {
         case List(Nil) => Nil
         case List(hd :: _) => hd
-        case _ => throw new Exception("`first` argument should be a list")
+        case arg => throw new Exception(s"`first` argument should be a list (got ${arg.show} instead)")
       }
 
       case Rest => execOp1({
         case List(Nil) => Nil
         case List(_ :: tl) => tl
-        case _ => throw new Exception("`rest` argument should be a list")
+        case arg => throw new Exception(s"`rest` argument should be a list (got ${arg.show} instead)")
       })
 
       case IsNil => execOp1({
@@ -174,7 +175,6 @@ class Vm {
         case String(reason) => throw new Exception(reason)
         case _ => throw new Exception("Invalid panic args (expected a string)")
       })
-
 
       case Self => execOp0(() => Thread.currentThread().getId.toFloat)
 
@@ -248,6 +248,11 @@ class Vm {
       case GetFree(ident) =>
         val value = frames.peek().closure.freeVariables(ident)
         stack.push(value)
+
+      case GenSym =>
+        val newSym = genSymCount
+        genSymCount += 1
+        stack.push(Symbol("G__" ++ newSym.toString))
     }
 
     @tailrec
