@@ -26,7 +26,7 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
   def define(name: java.lang.String, forceGlobal: Boolean = false): SymbolTable.Identifier = {
     if (forceGlobal) {
       outer match {
-        case None => define(name, forceGlobal = false)
+        case None => define(name)
         case Some(outerTable) => outerTable.define(name, forceGlobal = true)
       }
     } else {
@@ -59,7 +59,7 @@ class SymbolTable(val outer: Option[SymbolTable] = None) {
         )
 
         freeSymbols.addOne(resolvedSymbol)
-        store.put(name, resolvedSymbol)
+        store.put(name, symbol)
         symbol
       }
     })

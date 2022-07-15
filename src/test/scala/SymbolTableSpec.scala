@@ -79,6 +79,7 @@ class SymbolTableSpec extends AnyFlatSpec with should.Matchers {
     val secondLocal = firstLocal.nested
 
     expectResolveAs(secondLocal, ("c", 0, Free))
+    expectResolveAs(secondLocal, ("c", 0, Free))
     expectResolveAs(secondLocal, ("d", 1, Free))
   }
 
