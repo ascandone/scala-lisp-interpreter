@@ -56,12 +56,21 @@ object List {
 case class Function[Op](
                          instructions: Array[Op],
                          arity: ArgumentsArity = ArgumentsArity(),
-                       ) extends Value[Op]
+                       ) extends Value[Op] {
+
+  override def toString: java.lang.String = {
+    s"Function[${instructions.map(_.toString).mkString(", ")}]"
+  }
+}
 
 case class Closure[Op](
                         freeVariables: Array[Value[Op]],
                         fn: Function[Op],
-                      ) extends Value[Op]
+                      ) extends Value[Op] {
+  override def toString: java.lang.String = {
+    s"Closure[${fn.instructions.map(_.toString).mkString(", ")}]"
+  }
+}
 
 case class ArgumentsArity(
                            required: Int = 0,
