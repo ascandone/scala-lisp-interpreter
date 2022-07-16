@@ -143,3 +143,5 @@
       `(if ,(first clause)
         ,(second clause)
         (cond ,@(rest clauses))))))
+
+(def otherwise true)
