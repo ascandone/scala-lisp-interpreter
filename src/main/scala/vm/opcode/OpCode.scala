@@ -30,6 +30,8 @@ case class GetFree(ident: Int) extends OpCode
 
 case object Add extends OpCode
 
+case object Sub extends OpCode
+
 case object GreaterThan extends OpCode
 
 case object IsEq extends OpCode

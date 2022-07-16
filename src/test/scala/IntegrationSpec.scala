@@ -557,6 +557,24 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     "(case 42 (42 0) (42 (builtin/panic \"panic\")))" shouldEvalAs 0
   }
 
+  behavior of "fibonacci function"
+  it should "work as expected" in {
+    """
+      (defun fibonacci (n)
+         (cond
+            ((eq? 0 n) 0)
+            ((eq? 1 n) 1)
+            (otherwise (+
+                          (fibonacci (- n 1))
+                          (fibonacci (- n 2))))))
+      (list
+        (fibonacci 0)
+        (fibonacci 1)
+        (fibonacci 2)
+        (fibonacci 6))
+    """ shouldEvalAs List.of(0, 1, 1, 8)
+  }
+
   implicit class StringAssertions(val source: java.lang.String) {
     def shouldEvalAs(expected: Value[OpCode]): Unit = {
       val result = Interpreter.parseRun(source, loadPrelude = true)
