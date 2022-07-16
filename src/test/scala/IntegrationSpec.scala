@@ -557,6 +557,28 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     "(case 42 (42 0) (42 (builtin/panic \"panic\")))" shouldEvalAs 0
   }
 
+  behavior of "partial function"
+  it should "behave like the initial function without args" in {
+    """
+    (def partial+ (partial +))
+    (partial+ 1 2)
+    """ shouldEvalAs 3
+  }
+
+  it should "work with a single arg" in {
+    """
+    (def inc (partial + 1))
+    (inc 100)
+    """ shouldEvalAs (1 + 100)
+  }
+
+  it should "work with multiple args" in {
+    """
+    (def partial-list (partial list 1 2 3))
+    (partial-list 4 5 6)
+    """ shouldEvalAs List.of(1, 2, 3, 4, 5, 6)
+  }
+
   behavior of "fibonacci function"
   it should "work as expected" in {
     """

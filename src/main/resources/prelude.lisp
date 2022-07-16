@@ -36,6 +36,9 @@
 (defun nil? (a)
   (builtin/is-nil a))
 
+(defun apply (f args)
+  (builtin/apply f args))
+
 (defun sleep (a)
   (builtin/sleep a))
 
@@ -167,3 +170,7 @@
   (let1 (s (gensym))
     `(let1 (,s ,x)
       ,(case-helper s clauses))))
+
+(defun partial (f &rest initial-args)
+  (lambda (&rest args)
+    (apply f (concat initial-args args))))
