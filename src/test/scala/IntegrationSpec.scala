@@ -302,6 +302,16 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     """ shouldEvalAs 110
   }
 
+  they should "handle args order" in {
+    """
+    (def test
+      (lambda* (a b)
+        ((lambda* () (builtin/cons a (builtin/cons b ()))))))
+
+    (test 1 2)
+    """ shouldEvalAs List.of(1, 2)
+  }
+
   they should "work with global and local def" in {
     """
       (def glob 20)
@@ -525,6 +535,26 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
   it should "short-circuit the clauses" in {
     "(cond (true 0) ((builtin/panic \"panic\") 1))" shouldEvalAs 0
     "(cond (true 0) (true (builtin/panic \"panic\")))" shouldEvalAs 0
+  }
+
+  behavior of "case macro"
+  it should "return nil when no clauses are passed" in {
+    "(case 42)" shouldEvalAs Nil
+  }
+
+  it should "return nil when no clauses pass" in {
+    "(case 42 (0 0) (1 0))" shouldEvalAs Nil
+  }
+
+  it should "return the first passing clause" in {
+    "(case 42 (0 0) (42 1))" shouldEvalAs 1
+    "(case 42 (42 0) (42 1))" shouldEvalAs 0
+    "(case 42 (42 0))" shouldEvalAs 0
+  }
+
+  it should "short-circuit" in {
+    "(case 42 (42 0) ((builtin/panic \"panic\") 1))" shouldEvalAs 0
+    "(case 42 (42 0) (42 (builtin/panic \"panic\")))" shouldEvalAs 0
   }
 
   implicit class StringAssertions(val source: java.lang.String) {

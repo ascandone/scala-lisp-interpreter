@@ -172,10 +172,13 @@ class Vm {
         case _ => throw RuntimeError("Invalid sleep args")
       })
 
-      case Log => execOp1(x => {
-        println(x.show)
-        Nil
-      })
+      case Log => execOp1 {
+        case List(args) =>
+          println(args.map(_.show).mkString(" "))
+          Nil
+
+        case _ => throw RuntimeError("Expected a list in `log`")
+      }
 
       case Panic => execOp1({
         case String(reason) => throw RuntimeError(reason)
@@ -248,7 +251,7 @@ class Vm {
         stack.push(retValue)
 
       case PushClosure(freeVariablesNum, fn) =>
-        val freeVariables = (0 until freeVariablesNum).map(_ => stack.pop()).toArray
+        val freeVariables = (0 until freeVariablesNum).map(_ => stack.pop()).reverse.toArray
         stack.push(Closure(freeVariables, fn))
 
       case GetFree(ident) =>
