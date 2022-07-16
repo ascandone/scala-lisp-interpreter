@@ -146,7 +146,11 @@
 
 (def otherwise true)
 
-(defun logger (x) (log x) x)
+(defmacro logger (expr)
+  (let1 (s (gensym))
+    `(let1 (,s ,expr)
+        (log ',expr '-> ,s)
+        ,s)))
 
 (defun case-helper (x clauses)
   (if (nil? clauses)
