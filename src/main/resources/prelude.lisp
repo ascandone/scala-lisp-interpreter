@@ -40,8 +40,8 @@
 (defun send (a b) (builtin/send a b))
 (defun self () (builtin/self))
 
-(defun log (a)
-  (builtin/log a))
+(defun log (&rest args)
+  (builtin/log args))
 
 (defun eq? (a b)
   (builtin/is-eq a b))
@@ -145,3 +145,18 @@
         (cond ,@(rest clauses))))))
 
 (def otherwise true)
+
+(defun logger (x) (log x) x)
+
+(defun case-helper (x clauses)
+  (if (nil? clauses)
+    nil
+    (let1 (clause (first clauses))
+      `(if (eq? ,x ,(first clause))
+          ,(second clause)
+          ,(case-helper x (rest clauses))))))
+
+(defmacro case (x &rest clauses)
+  (let1 (s (gensym))
+    `(let1 (,s ,x)
+      ,(case-helper s clauses))))
