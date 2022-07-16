@@ -6,6 +6,11 @@ import vm.opcode._
 
 import scala.collection.mutable
 
+final case class CompilationError(
+                                   message: java.lang.String,
+                                   cause: Throwable = None.orNull
+                                 ) extends Exception(message, cause)
+
 object Compiler {
   // Constants
   val TRUE = "true"
@@ -46,7 +51,7 @@ class Compiler(vm: Vm = new Vm) {
         emitter.emit(Push(value))
 
       case Symbol(name) => symbolTable.resolve(name) match {
-        case None => throw new Error(s"Binding not found: $name")
+        case None => throw CompilationError(s"Binding not found: $name")
         case Some(sym) => sym.scope match {
           case Global => emitter.emit(GetGlobal(sym.index))
           case Local => emitter.emit(GetLocal(sym.index))
@@ -63,32 +68,32 @@ class Compiler(vm: Vm = new Vm) {
           case cond :: Nil => compileIf(cond)
           case cond :: a :: Nil => compileIf(cond, a)
           case cond :: a :: b :: Nil => compileIf(cond, a, b)
-          case _ => throw new Exception("Invalid `if` arity")
+          case _ => throw CompilationError("Invalid `if` arity")
         }
 
         case Symbol(Compiler.DEF) :: args => args match {
           case Symbol(name) :: args2 => args2 match {
             case Nil => compileDef(name)
             case value :: Nil => compileDef(name, value)
-            case _ => throw new Exception("Invalid `def` arity")
+            case _ => throw CompilationError("Invalid `def` arity")
           }
 
-          case _ => throw new Exception("Invalid `def` arguments")
+          case _ => throw CompilationError("Invalid `def` arguments")
         }
 
         case Symbol(Compiler.DEF_MACRO) :: args => args match {
           case Symbol(name) :: List(params) :: body :: Nil => compileMacro(name, params, body)
-          case _ => throw new Exception("Invalid `defmacro` arguments")
+          case _ => throw CompilationError("Invalid `defmacro` arguments")
         }
 
         case Symbol(Compiler.LAMBDA) :: args => args match {
           case List(params) :: body :: Nil => compileLambda(params, body)
-          case _ => throw new Exception("Invalid `lambda` arguments")
+          case _ => throw CompilationError("Invalid `lambda` arguments")
         }
 
         case Symbol(Compiler.QUOTE) :: args => args match {
           case value :: Nil => emitter.emit(Push(value))
-          case _ => throw new Exception("Invalid `quote` arguments")
+          case _ => throw CompilationError("Invalid `quote` arguments")
         }
 
         case Symbol("builtin/gensym") :: args => compileOp0(GenSym, args)
@@ -126,8 +131,13 @@ class Compiler(vm: Vm = new Vm) {
             )
           ).flatten.toArray
 
-          val result = vm.run(instructions)
-          compile(result)
+          try {
+            val result = vm.run(instructions)
+            compile(result)
+          } catch {
+            case e: RuntimeError => throw CompilationError(e.message)
+          }
+
 
         case None =>
           for (arg <- args) {
@@ -209,7 +219,7 @@ class Compiler(vm: Vm = new Vm) {
       case Nil =>
         emitter.emit(op)
 
-      case _ => throw new Exception(s"Invalid arity (expected 0, got ${args.length}")
+      case _ => throw CompilationError(s"Invalid arity (expected 0, got ${args.length}")
     }
 
     private def compileOp1(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
@@ -217,7 +227,7 @@ class Compiler(vm: Vm = new Vm) {
         compile(x)
         emitter.emit(op)
 
-      case _ => throw new Exception(s"Invalid arity (expected 1, got ${args.length}")
+      case _ => throw CompilationError(s"Invalid arity (expected 1, got ${args.length}")
     }
 
     private def compileOp2(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
@@ -225,7 +235,7 @@ class Compiler(vm: Vm = new Vm) {
         compile(x)
         compile(y)
         emitter.emit(op)
-      case _ => throw new Exception(s"Invalid arity (expected 2, got ${args.length})")
+      case _ => throw CompilationError(s"Invalid arity (expected 2, got ${args.length})")
     }
 
   }
@@ -240,7 +250,7 @@ class Compiler(vm: Vm = new Vm) {
 
       val compiledParams = CompiledParams.compile(params.map {
         case Symbol(str) => str
-        case value => throw new Exception(s"Invalid `lambda` parameter (expected a symbol, got `${value.show}` instead)")
+        case value => throw CompilationError(s"Invalid `lambda` parameter (expected a symbol, got `${value.show}` instead)")
       })
       for (param <- compiledParams.required) {
         compiler.symbolTable.define(param)
@@ -297,7 +307,7 @@ private object CompiledParams {
   private def compileOpt(args: scala.List[java.lang.String]): CompiledParams =
     args match {
       case Nil => new CompiledParams()
-      case OPTIONAL :: _ => throw new Exception("duplicate &opt is not allowed")
+      case OPTIONAL :: _ => throw CompilationError("duplicate &opt is not allowed")
       case REST :: args1 => compileRest(args1)
       case arg :: tl =>
         val rc = compileOpt(tl)
@@ -306,10 +316,10 @@ private object CompiledParams {
 
   private def compileRest(args: scala.List[java.lang.String]): CompiledParams =
     args match {
-      case Nil => throw new Exception("no labels after &rest")
-      case OPTIONAL :: _ => throw new Exception("duplicate &opt is not allowed")
-      case REST :: _ => throw new Exception("duplicate &rest is not allowed")
+      case Nil => throw CompilationError("no labels after &rest")
+      case OPTIONAL :: _ => throw CompilationError("duplicate &opt is not allowed")
+      case REST :: _ => throw CompilationError("duplicate &rest is not allowed")
       case arg :: Nil => new CompiledParams(rest = Some(arg))
-      case _ :: _ :: _ => throw new Exception("only one argument after &rest is allowed")
+      case _ :: _ :: _ => throw CompilationError("only one argument after &rest is allowed")
     }
 }

@@ -1,6 +1,8 @@
 package cli
 
+import compiler.CompilationError
 import interpreter.Interpreter
+import vm.RuntimeError
 
 import scala.annotation.tailrec
 import scala.io.Source
@@ -26,10 +28,16 @@ object Main {
 
   @tailrec
   private def repl(): Unit = {
-    print(">> ")
-    val line = readLine()
-    val retValue = interpreter.parseEval(line)
-    println(retValue.show)
+    try {
+      print(">> ")
+      val line = readLine()
+      val retValue = interpreter.parseEval(line)
+      println(retValue.show)
+    } catch {
+      case e: CompilationError => println(s"Compilation error: ${e.message}")
+      case e: RuntimeError => println(e.message)
+    }
+
     repl()
   }
 }

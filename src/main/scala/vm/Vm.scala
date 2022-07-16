@@ -9,6 +9,13 @@ import java.util.concurrent.LinkedTransferQueue
 import scala.annotation.tailrec
 import scala.collection.mutable
 
+
+final case class RuntimeError(
+                               message: java.lang.String,
+                               cause: Throwable = None.orNull
+                             ) extends Exception(message, cause)
+
+
 object Vm {
   private def valueToClosure(value: Value[OpCode]): Closure[OpCode] = value match {
     case fn@Function(_, _) => Closure(
@@ -18,7 +25,7 @@ object Vm {
 
     case closure@Closure(_, _) => closure
 
-    case _ => throw new Exception(s"Expected a function (got ${value.show} instead)")
+    case _ => throw RuntimeError(s"Expected a function (got ${value.show} instead)")
   }
 }
 
@@ -111,20 +118,19 @@ class Vm {
         val givenArgs = stack.pop() match {
           case List(lst) => lst
           // TODO better err
-          case _ => throw new Exception("Expected a list")
+          case _ => throw RuntimeError("Expected a list")
         }
         val closure = Vm.valueToClosure(stack.pop())
         callFunction(closure, givenArgs)
 
       case Add => execOp2((x, y) => (x, y) match {
         case (Number(na), Number(nb)) => na + nb
-        case _ => throw new Exception(s"Add error (expected numbers, got ${x.show} and ${y.show}")
+        case _ => throw RuntimeError(s"Add error (expected numbers, got ${x.show} and ${y.show}")
       })
-
 
       case GreaterThan => execOp2((a, b) => (a, b) match {
         case (Number(na), Number(nb)) => na > nb
-        case _ => throw new Exception("GT error")
+        case _ => throw RuntimeError("GT error")
       })
 
       case IsEq => execOp2((x, y) => x == y)
@@ -133,19 +139,19 @@ class Vm {
 
       case Cons => execOp2((head, tail) => tail match {
         case List(tail_) => List(head :: tail_)
-        case _ => throw new Exception("Cons tail should be a list")
+        case _ => throw RuntimeError("Cons tail should be a list")
       })
 
       case First => execOp1 {
         case List(Nil) => Nil
         case List(hd :: _) => hd
-        case arg => throw new Exception(s"`first` argument should be a list (got ${arg.show} instead)")
+        case arg => throw RuntimeError(s"`first` argument should be a list (got ${arg.show} instead)")
       }
 
       case Rest => execOp1({
         case List(Nil) => Nil
         case List(_ :: tl) => tl
-        case arg => throw new Exception(s"`rest` argument should be a list (got ${arg.show} instead)")
+        case arg => throw RuntimeError(s"`rest` argument should be a list (got ${arg.show} instead)")
       })
 
       case IsNil => execOp1({
@@ -163,7 +169,7 @@ class Vm {
           Thread.sleep(nms.toLong)
           Nil
 
-        case _ => throw new Exception("Invalid sleep args")
+        case _ => throw RuntimeError("Invalid sleep args")
       })
 
       case Log => execOp1(x => {
@@ -172,8 +178,8 @@ class Vm {
       })
 
       case Panic => execOp1({
-        case String(reason) => throw new Exception(reason)
-        case _ => throw new Exception("Invalid panic args (expected a string)")
+        case String(reason) => throw RuntimeError(reason)
+        case _ => throw RuntimeError("Invalid panic args (expected a string)")
       })
 
       case Self => execOp0(() => Thread.currentThread().getId.toFloat)
@@ -200,7 +206,7 @@ class Vm {
         val selfId = Thread.currentThread().getId.toFloat
         val maybeQueue = queues.get(selfId)
         maybeQueue match {
-          case None => throw new Exception(s"thread $selfId not found (in receive)")
+          case None => throw RuntimeError(s"thread $selfId not found (in receive)")
           case Some(queue) =>
             val value = queue.take()
             stack.push(value)
@@ -210,12 +216,12 @@ class Vm {
         val valueToSend = stack.pop()
         val id = stack.pop() match {
           case Number(n) => n
-          case _ => throw new Exception("expected a number")
+          case _ => throw RuntimeError("expected a number")
         }
 
         val maybeQueue = queues.get(id)
         maybeQueue match {
-          case None => throw new Exception(s"thread $id not found (in send)")
+          case None => throw RuntimeError(s"thread $id not found (in send)")
           case Some(queue) =>
             queue.transfer(valueToSend)
             stack.push(Nil)
@@ -266,8 +272,8 @@ class Vm {
     private def callFunction(closure: Closure[OpCode], givenArgs: scala.List[Value[OpCode]]): Unit =
       closure.fn.arity parse givenArgs match {
         // TODO better error
-        case Left(ArgumentsArity.RequiredArgsMissing(expected, got)) => throw new Exception(s"Arity error (expected at least $expected, got $got)")
-        case Left(ArgumentsArity.TooManyArgs(extra)) => throw new Exception(s"Arity error (got $extra more)")
+        case Left(ArgumentsArity.RequiredArgsMissing(expected, got)) => throw RuntimeError(s"Arity error (expected at least $expected, got $got)")
+        case Left(ArgumentsArity.TooManyArgs(extra)) => throw RuntimeError(s"Arity error (got $extra more)")
         case Right(parsedArgs) =>
 
           if (
