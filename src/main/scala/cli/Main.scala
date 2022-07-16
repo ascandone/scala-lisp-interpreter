@@ -31,8 +31,13 @@ object Main {
     try {
       print(">> ")
       val line = readLine()
-      val retValue = interpreter.parseEval(line)
-      println(retValue.show)
+      line match {
+        case ":reload" => interpreter.loadPrelude()
+        case _ => {
+          val retValue = interpreter.parseEval(line)
+          println(retValue.show)
+        }
+      }
     } catch {
       case e: CompilationError => println(s"Compilation error: ${e.message}")
       case e: RuntimeError => println(e.message)
