@@ -362,7 +362,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       (def x 42)
       (defmacro prevent-crash (x) (builtin/first x))
       (prevent-crash (x "this should crash"))
-    """.stripMargin shouldEvalAs 42
+    """ shouldEvalAs 42
   }
 
   they should "have be able to return quoted version of args" in {
