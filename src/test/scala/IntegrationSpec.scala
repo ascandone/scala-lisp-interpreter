@@ -507,6 +507,26 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     "(-> 100 (+ 10) (+ 20) (+ 30))" shouldEvalAs (100 + 10 + 20 + 30)
   }
 
+  behavior of "cond macro"
+  it should "return nil when no args are passed" in {
+    "(cond)" shouldEvalAs Nil
+  }
+
+  it should "return return the first true clause" in {
+    "(cond (true 0))" shouldEvalAs 0
+    "(cond (true 0) (true 42))" shouldEvalAs 0
+    "(cond (false 0) (true 42))" shouldEvalAs 42
+  }
+
+  it should "return return nil when no true clauses are passed" in {
+    "(cond (false 42))" shouldEvalAs Nil
+  }
+
+  it should "short-circuit the clauses" in {
+    "(cond (true 0) ((builtin/panic \"panic\") 1))" shouldEvalAs 0
+    "(cond (true 0) (true (builtin/panic \"panic\")))" shouldEvalAs 0
+  }
+
   implicit class StringAssertions(val source: java.lang.String) {
     def shouldEvalAs(expected: Value[OpCode]): Unit = {
       val result = Interpreter.parseRun(source, loadPrelude = true)
