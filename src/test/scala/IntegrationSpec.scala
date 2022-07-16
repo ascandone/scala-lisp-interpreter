@@ -19,6 +19,12 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     "(builtin/add 10 20)" shouldEvalAs 30
   }
 
+  behavior of "-"
+  it should "work as expected" in {
+    "(builtin/sub 10 1)" shouldEvalAs 9
+    "(builtin/sub 0 1)" shouldEvalAs -1
+  }
+
   behavior of ">"
   it should "behave as > operator" in {
     "(builtin/greater-than 10 200)" shouldEvalAs false
@@ -596,6 +602,39 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
         (fibonacci 6))
     """ shouldEvalAs List.of(0, 1, 1, 8)
   }
+
+  behavior of "reverse"
+  it should "reverse the given list" in {
+    "(reverse nil)" shouldEvalAs Nil
+    "(reverse (list 1 2 3))" shouldEvalAs List.of(3, 2, 1)
+  }
+
+  behavior of "count"
+  it should "work with lists" in {
+    "(count (list 1 2 3))" shouldEvalAs 3
+    "(count nil)" shouldEvalAs 0
+  }
+
+  behavior of "range"
+  it should "return nil with empty ranges" in {
+    "(range 0 0)" shouldEvalAs Nil
+    "(range 10 0)" shouldEvalAs Nil
+  }
+
+  it should "work with non empty ranges" in {
+    "(range 0 4)" shouldEvalAs List.of(0, 1, 2, 3)
+  }
+
+  it should "work with a different step" in {
+    "(range 0 4 2)" shouldEvalAs List.of(0, 2)
+    "(range 0 5 2)" shouldEvalAs List.of(0, 2, 4)
+    "(range 5 20 4)" shouldEvalAs List.of(5, 9, 13, 17)
+  }
+
+  it should "be tail call optimized" in {
+    "(count (range 0 2000))" shouldEvalAs 2000
+  }
+
 
   implicit class StringAssertions(val source: java.lang.String) {
     def shouldEvalAs(expected: Value[OpCode]): Unit = {

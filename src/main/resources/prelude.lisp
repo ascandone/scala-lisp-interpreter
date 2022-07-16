@@ -21,11 +21,17 @@
 (defun > (a b)
   (builtin/greater-than a b))
 
+(defun < (a b)
+  (builtin/lesser-than a b))
+
 (defun ! (a)
   (builtin/not a))
 
 (defun cons (a b)
   (builtin/cons a b))
+
+(defun flipped-cons (a b)
+  (builtin/cons b a))
 
 (defun first (a)
   (builtin/first a))
@@ -64,6 +70,11 @@
     (f
       (first lst)
       (foldr (rest lst) z f))))
+
+(defun foldl (lst z f)
+  (if (nil? lst)
+    z
+    (foldl (rest lst) (f z (first lst)) f)))
 
 (defun concat (&rest nested)
   (foldr
@@ -131,6 +142,12 @@
                 s
                 `(or ,@(rest clauses))))))))
 
+(defun >= (x y)
+  (or (> x y) (eq? x y)))
+
+(defun <= (x y)
+  (or (< x y) (eq? x y)))
+
 (defmacro -> (x &rest forms)
   (if (nil? forms)
     x
@@ -174,3 +191,24 @@
 (defun partial (f &rest initial-args)
   (lambda (&rest args)
     (apply f (concat initial-args args))))
+
+(defun dec (x)
+  (- x 1))
+
+(defun inc (x)
+  (+ x 1))
+
+(defun count (lst)
+  (foldl lst 0 (lambda (acc _) (inc acc))))
+
+(defun reverse (lst)
+  (foldl lst nil flipped-cons))
+
+(defun range-helper (start end step acc)
+  (if (>= start end)
+    acc
+    (range-helper (+ start step) end step (cons start acc))))
+
+(defun range (start end &opt step)
+  (reverse (range-helper start end (or step 1) nil)))
+

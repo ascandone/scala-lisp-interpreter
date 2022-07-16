@@ -34,6 +34,8 @@ case object Sub extends OpCode
 
 case object GreaterThan extends OpCode
 
+case object LesserThan extends OpCode
+
 case object IsEq extends OpCode
 
 case object Not extends OpCode

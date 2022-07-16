@@ -135,7 +135,12 @@ class Vm {
 
       case GreaterThan => execOp2((a, b) => (a, b) match {
         case (Number(na), Number(nb)) => na > nb
-        case _ => throw RuntimeError("GT error")
+        case _ => throw RuntimeError(s"error in >")
+      })
+
+      case LesserThan => execOp2((a, b) => (a, b) match {
+        case (Number(na), Number(nb)) => na < nb
+        case _ => throw RuntimeError("error in <")
       })
 
       case IsEq => execOp2((x, y) => x == y)
