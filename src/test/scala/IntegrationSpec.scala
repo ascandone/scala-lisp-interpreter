@@ -358,7 +358,11 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   }
 
   they should "have access to unevaluated version of arguments" in {
-    "(def x 42) (defmacro prevent-crash (x) (builtin/first x)) (prevent-crash (x \"this should crash\"))" shouldEvalAs 42
+    """
+      (def x 42)
+      (defmacro prevent-crash (x) (builtin/first x))
+      (prevent-crash (x "this should crash"))
+    """.stripMargin shouldEvalAs 42
   }
 
   they should "have be able to return quoted version of args" in {
@@ -502,7 +506,7 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
   it should "handle multiple forms" in {
     "(-> 100 (+ 10) (+ 20) (+ 30))" shouldEvalAs (100 + 10 + 20 + 30)
   }
-  
+
   implicit class StringAssertions(val source: java.lang.String) {
     def shouldEvalAs(expected: Value[OpCode]): Unit = {
       val result = Interpreter.parseRun(source, loadPrelude = true)
