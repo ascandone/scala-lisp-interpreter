@@ -15,6 +15,9 @@
 (defun + (a b)
   (builtin/add a b))
 
+(defun * (a b)
+  (builtin/mult a b))
+
 (defun - (a b)
   (builtin/sub a b))
 

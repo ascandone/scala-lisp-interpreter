@@ -19,6 +19,11 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
     "(builtin/add 10 20)" shouldEvalAs 30
   }
 
+  behavior of "*"
+  it should "multiply two numbers" in {
+    "(builtin/mult 2 3)" shouldEvalAs 6
+  }
+
   behavior of "-"
   it should "work as expected" in {
     "(builtin/sub 10 1)" shouldEvalAs 9

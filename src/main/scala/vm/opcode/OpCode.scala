@@ -32,6 +32,8 @@ case object Add extends OpCode
 
 case object Sub extends OpCode
 
+case object Mult extends OpCode
+
 case object GreaterThan extends OpCode
 
 case object LesserThan extends OpCode

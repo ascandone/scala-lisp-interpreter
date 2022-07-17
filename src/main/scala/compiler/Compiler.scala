@@ -103,6 +103,7 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/receive") :: args => compileOp0(Receive, args)
         case Symbol("builtin/self") :: args => compileOp0(Self, args)
         case Symbol("builtin/add") :: args => compileOp2(Add, args)
+        case Symbol("builtin/mult") :: args => compileOp2(Mult, args)
         case Symbol("builtin/sub") :: args => compileOp2(Sub, args)
         case Symbol("builtin/log") :: args => compileOp1(Log, args)
         case Symbol("builtin/greater-than") :: args => compileOp2(GreaterThan, args)
