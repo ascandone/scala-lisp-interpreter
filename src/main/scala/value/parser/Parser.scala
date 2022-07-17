@@ -27,7 +27,7 @@ object Parser extends RegexParsers {
   private def value: Parser[Value[Nothing]] =
     numberLiteral | stringLiteral | symbol | quotationSugar | form
 
-  private def numberLiteral: Parser[Number[Nothing]] = """[1-9][0-9]*|0""".r ^^ { value => Number(value.toFloat) }
+  private def numberLiteral: Parser[Number[Nothing]] = """[1-9][0-9]*|0""".r ^^ { value => Number(value.toDouble) }
 
   private def stringLiteral: Parser[String[Nothing]] = "\"" ~> """[a-zA-Z0-9:*/+\- !]*""".r <~ "\"" ^^ String[Nothing]
 

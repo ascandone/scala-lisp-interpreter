@@ -34,8 +34,8 @@ class Vm {
   private var genSymCount = 0
 
   private val queues = {
-    val map = mutable.HashMap[Float, LinkedTransferQueue[Value[OpCode]]]()
-    map.put(Thread.currentThread().getId.toFloat, new LinkedTransferQueue[Value[OpCode]]())
+    val map = mutable.HashMap[Double, LinkedTransferQueue[Value[OpCode]]]()
+    map.put(Thread.currentThread().getId.toDouble, new LinkedTransferQueue[Value[OpCode]]())
     map
   }
 
@@ -200,7 +200,7 @@ class Vm {
         case _ => throw RuntimeError("Invalid panic args (expected a string)")
       })
 
-      case Self => execOp0(() => Thread.currentThread().getId.toFloat)
+      case Self => execOp0(() => Thread.currentThread().getId.toDouble)
 
       case Fork =>
         val closure = Vm.valueToClosure(stack.pop())
@@ -216,12 +216,12 @@ class Vm {
 
         thread.setDaemon(true)
         thread.start()
-        val id = thread.getId.toFloat
+        val id = thread.getId.toDouble
         queues.put(id, new LinkedTransferQueue())
         stack.push(id)
 
       case Receive =>
-        val selfId = Thread.currentThread().getId.toFloat
+        val selfId = Thread.currentThread().getId.toDouble
         val maybeQueue = queues.get(selfId)
         maybeQueue match {
           case None => throw RuntimeError(s"thread $selfId not found (in receive)")

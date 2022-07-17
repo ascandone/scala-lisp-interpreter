@@ -17,7 +17,7 @@ object Value {
     case _ => true
   }
 
-  implicit def fromNumber[Op](n: Float): Value[Op] = Number(n)
+  implicit def fromNumber[Op](n: Double): Value[Op] = Number(n)
 
   implicit def fromString[Op](s: java.lang.String): Value[Op] = String(s)
 
@@ -41,7 +41,7 @@ sealed trait Value[+Op] {
   }
 }
 
-case class Number[+Op](value: Float) extends Value[Op]
+case class Number[+Op](value: Double) extends Value[Op]
 
 case class String[+Op](value: java.lang.String) extends Value[Op]
 
