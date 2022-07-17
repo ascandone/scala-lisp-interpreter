@@ -125,7 +125,8 @@ class Vm {
 
       case Add => execOp2((x, y) => (x, y) match {
         case (Number(na), Number(nb)) => na + nb
-        case _ => throw RuntimeError(s"Add error (expected numbers, got ${x.show} and ${y.show}")
+        case (String(na), String(nb)) => na + nb
+        case _ => throw RuntimeError(s"Add error (expected two numbers or strings, got ${x.show} and ${y.show}")
       })
 
       case Mult => execOp2((x, y) => (x, y) match {
