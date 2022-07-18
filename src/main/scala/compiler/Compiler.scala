@@ -113,10 +113,14 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/first") :: args => compileOp1(First, args)
         case Symbol("builtin/rest") :: args => compileOp1(Rest, args)
         case Symbol("builtin/is-nil") :: args => compileOp1(IsNil, args)
+        case Symbol("builtin/is-list") :: args => compileOp1(IsList, args)
+        case Symbol("builtin/is-symbol") :: args => compileOp1(IsSymbol, args)
+        case Symbol("builtin/is-number") :: args => compileOp1(IsNumber, args)
+        case Symbol("builtin/is-string") :: args => compileOp1(IsString, args)
+        case Symbol("builtin/str") :: args => compileOp1(Str, args)
         case Symbol("builtin/sleep") :: args => compileOp1(Sleep, args)
         case Symbol("builtin/panic") :: args => compileOp1(Panic, args)
         case Symbol("builtin/is-eq") :: args => compileOp2(IsEq, args)
-        case Symbol("builtin/is-list") :: args => compileOp1(IsList, args)
 
         case f :: args => compileApplication(f, args)
       }

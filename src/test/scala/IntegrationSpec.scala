@@ -532,6 +532,86 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     "(-> 100 (+ 10) (+ 20) (+ 30))" shouldEvalAs (100 + 10 + 20 + 30)
   }
 
+  behavior of "nil?"
+  it should "return true when nil is applied" in {
+    "(nil? nil)" shouldEvalAs true
+  }
+
+  it should "return false when something else is applied" in {
+    "(nil? 42)" shouldEvalAs false
+    "(nil? \"abc\")" shouldEvalAs false
+    "(nil? 'x)" shouldEvalAs false
+    "(nil? '(1 2 3))" shouldEvalAs false
+  }
+
+  behavior of "list?"
+  it should "return true when a list is applied" in {
+    "(list? nil)" shouldEvalAs true
+    "(list? '(1 2 3))" shouldEvalAs true
+  }
+
+  it should "return false when something else is applied" in {
+    "(list? 42)" shouldEvalAs false
+    "(list? \"abc\")" shouldEvalAs false
+    "(list? 'x)" shouldEvalAs false
+  }
+
+  behavior of "symbol?"
+  it should "return true when a symbol is applied" in {
+    "(symbol? 'x)" shouldEvalAs true
+  }
+
+  it should "return false when something else is applied" in {
+    "(symbol? 42)" shouldEvalAs false
+    "(symbol? \"abc\")" shouldEvalAs false
+    "(symbol? nil)" shouldEvalAs false
+    "(symbol? '(1 2 3))" shouldEvalAs false
+  }
+
+  behavior of "string?"
+  it should "return true when a string is applied" in {
+    "(string? \"abc\")" shouldEvalAs true
+  }
+
+  it should "return false when something else is applied" in {
+    "(string? 42)" shouldEvalAs false
+    "(string? nil)" shouldEvalAs false
+    "(string? '(1 2 3))" shouldEvalAs false
+    "(string? 'x)" shouldEvalAs false
+  }
+
+  behavior of "number?"
+  it should "return true when a number is applied" in {
+    "(number? 42)" shouldEvalAs true
+  }
+
+  it should "return false when something else is applied" in {
+    "(number? nil)" shouldEvalAs false
+    "(number? '(1 2 3))" shouldEvalAs false
+    "(number? 'x)" shouldEvalAs false
+    "(number? \"abc\")" shouldEvalAs false
+  }
+
+  behavior of "str"
+  it should "act as identity with strings" in {
+    "(str \"abc\")" shouldEvalAs "abc"
+  }
+
+  it should "convert numbers to strings" in {
+    // TODO floats
+    "(str 42)" shouldEvalAs "42"
+  }
+
+  it should "convert symbols to strings" in {
+    "(str 'x)" shouldEvalAs "x"
+    "(str 'G__0)" shouldEvalAs "G__0"
+  }
+
+  it should "convert lists to strings" in {
+    "(str '())" shouldEvalAs "nil"
+    "(str '(1 2 3))" shouldEvalAs "(1 2 3)"
+  }
+
   behavior of "cond macro"
   it should "return nil when no args are passed" in {
     "(cond)" shouldEvalAs Nil

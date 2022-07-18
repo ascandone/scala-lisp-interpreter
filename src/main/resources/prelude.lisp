@@ -48,6 +48,21 @@
 (defun nil? (a)
   (builtin/is-nil a))
 
+(defun list? (a)
+  (builtin/is-list a))
+
+(defun symbol? (a)
+  (builtin/is-symbol a))
+
+(defun string? (a)
+  (builtin/is-string a))
+
+(defun number? (a)
+  (builtin/is-number a))
+
+(defun str (a)
+  (builtin/str a))
+
 (defun apply (f args)
   (builtin/apply f args))
 
@@ -63,9 +78,6 @@
 
 (defun eq? (a b)
   (builtin/is-eq a b))
-
-(defun list? (a)
-  (builtin/is-list a))
 
 (defun second (lst)
   (first (rest lst)))

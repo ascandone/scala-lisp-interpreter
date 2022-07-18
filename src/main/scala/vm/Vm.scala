@@ -180,6 +180,26 @@ class Vm {
         case _ => false
       })
 
+      case IsNumber => execOp1({
+        case Number(_) => true
+        case _ => false
+      })
+
+      case IsString => execOp1({
+        case String(_) => true
+        case _ => false
+      })
+
+      case IsSymbol => execOp1({
+        case Symbol(_) => true
+        case _ => false
+      })
+
+      case Str => execOp1({
+        case String(s) => s
+        case x => x.show
+      })
+
       case Sleep => execOp1({
         case Number(nms) =>
           Thread.sleep(nms.toLong)

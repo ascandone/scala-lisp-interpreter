@@ -50,6 +50,12 @@ case object Rest extends OpCode
 
 case object IsNil extends OpCode
 
+case object IsString extends OpCode
+
+case object IsSymbol extends OpCode
+
+case object IsNumber extends OpCode
+
 case object IsList extends OpCode
 
 case object Sleep extends OpCode
@@ -67,3 +73,5 @@ case object Send extends OpCode
 case object Self extends OpCode
 
 case object GenSym extends OpCode
+
+case object Str extends OpCode
