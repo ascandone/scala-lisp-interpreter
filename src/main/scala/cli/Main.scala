@@ -28,20 +28,36 @@ object Main {
   }
 
   @tailrec
-  private def repl(): Unit = {
+  private def readBlock(acc: java.lang.String = ""): java.lang.String = {
+    val line = readLine()
+    line match {
+      case ":}" => acc
+      case _ => readBlock(acc + line)
+    }
+  }
+
+  private def evalBlock(source: java.lang.String): Unit = {
     try {
-      print(">> ")
-      val line = readLine()
-      line match {
-        case ":reload" => interpreter.loadPrelude()
-        case _ =>
-          val retValue = interpreter.parseEval(line)
-          println(retValue.show)
-      }
+      val retValue = interpreter.parseEval(source)
+      println(retValue.show)
     } catch {
       case e: CompilationError => println(s"Compilation error: ${e.message}")
       case e: RuntimeError => println(e.message)
       case e: ParsingError => println(s"Parsing error: ${e.message}")
+    }
+  }
+
+  @tailrec
+  private def repl(): Unit = {
+    print(">> ")
+    val line = readLine()
+
+    line match {
+      case ":reload" => interpreter.loadPrelude()
+      case ":{" =>
+        val source = readBlock()
+        evalBlock(source)
+      case _ => evalBlock(line)
     }
 
     repl()
