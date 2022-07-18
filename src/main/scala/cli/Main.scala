@@ -2,6 +2,7 @@ package cli
 
 import compiler.CompilationError
 import interpreter.Interpreter
+import value.parser.ParsingError
 import vm.RuntimeError
 
 import scala.annotation.tailrec
@@ -33,14 +34,14 @@ object Main {
       val line = readLine()
       line match {
         case ":reload" => interpreter.loadPrelude()
-        case _ => {
+        case _ =>
           val retValue = interpreter.parseEval(line)
           println(retValue.show)
-        }
       }
     } catch {
       case e: CompilationError => println(s"Compilation error: ${e.message}")
       case e: RuntimeError => println(e.message)
+      case e: ParsingError => println(s"Parsing error: ${e.message}")
     }
 
     repl()

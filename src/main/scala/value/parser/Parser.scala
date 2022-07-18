@@ -5,12 +5,17 @@ import value._
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
+final case class ParsingError(
+                               message: java.lang.String,
+                               cause: Throwable = None.orNull
+                             ) extends Exception(message, cause)
+
 object Parser extends RegexParsers {
   override protected val whiteSpace: Regex = """(\s|;.*)+""".r
 
   def unsafeRun(input: CharSequence): scala.List[Value[Nothing]] = run(input) match {
     case Success(result, _) => result
-    case NoSuccess(msg, _) => throw new Exception(msg)
+    case NoSuccess(msg, _) => throw ParsingError(msg)
     case _ => ???
   }
 
