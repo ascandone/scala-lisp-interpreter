@@ -215,3 +215,8 @@
 (defun range (start end &opt step)
   (reverse (range-helper start end (or step 1) nil)))
 
+
+(defmacro if-not (b x &opt y)
+  `(if ,b
+    ,y
+    ,x))

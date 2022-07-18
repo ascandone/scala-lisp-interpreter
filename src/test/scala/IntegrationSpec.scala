@@ -644,6 +644,16 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     "(count (range 0 2000))" shouldEvalAs 2000
   }
 
+  behavior of "if-not macro"
+  it should "behave as the opposite of if" in {
+    "(if-not true 0 1)" shouldEvalAs 1
+    "(if-not false 0 1)" shouldEvalAs 0
+  }
+
+  it should "allow the last argument to be optional" in {
+    "(if-not true 0)" shouldEvalAs Nil
+    "(if-not false 0)" shouldEvalAs 0
+  }
 
   implicit class StringAssertions(val source: java.lang.String) {
     def shouldEvalAs(expected: Value[OpCode]): Unit = {
