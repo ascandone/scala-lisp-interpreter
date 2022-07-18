@@ -624,6 +624,16 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     "(count nil)" shouldEvalAs 0
   }
 
+  behavior of "filter"
+  it should "return nil when nil is passed" in {
+    "(filter nil (lambda (_) (panic \"panic\")))" shouldEvalAs Nil
+  }
+
+  it should "keep only the elements for which the predicates returns true" in {
+    "(filter '(10 20 30 10 0 100) (lambda (x) (> x 10)))" shouldEvalAs List.of(20, 30, 100)
+    "(filter '(0 1 2) (lambda (x) (> x 10)))" shouldEvalAs Nil
+  }
+
   behavior of "range"
   it should "return nil with empty ranges" in {
     "(range 0 0)" shouldEvalAs Nil

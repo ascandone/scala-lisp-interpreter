@@ -9,6 +9,9 @@
   (list 'def name
     (builtin/cons 'lambda (builtin/cons params body))))
 
+(defun panic (a)
+  (builtin/panic a))
+
 (defun gensym ()
   (builtin/gensym))
 
@@ -82,16 +85,23 @@
 (defun concat (&rest nested)
   (foldr
     nested
-    ()
+    nil
     (lambda (xs ys) (foldr xs ys cons))))
 
 (defun mapcat (lst f)
-  (foldr lst ()
+  (foldr lst nil
     (lambda (el acc) (concat (f el) acc))))
 
 (defun map (lst f)
-  (foldr lst ()
+  (foldr lst nil
     (lambda (el acc) (cons (f el) acc))))
+
+(defun filter (lst pred)
+  (foldr lst nil
+    (lambda (el acc)
+      (if (pred el)
+        (cons el acc)
+        acc))))
 
 (defun backquote-helper (nested)
   (if (list? nested)
@@ -214,7 +224,6 @@
 
 (defun range (start end &opt step)
   (reverse (range-helper start end (or step 1) nil)))
-
 
 (defmacro if-not (b x &opt y)
   `(if ,b
