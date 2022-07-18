@@ -42,5 +42,5 @@ class Interpreter {
   def eval(values: scala.List[Value[Nothing]]): Value[OpCode] = values.map(value => {
     val compiled = compiler.compile(scala.List(value))
     vm.run(compiled)
-  }).last
+  }).lastOption.getOrElse(Nil)
 }
