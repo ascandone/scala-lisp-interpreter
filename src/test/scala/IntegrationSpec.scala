@@ -617,6 +617,17 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     """(str "ab" 42 "ef")""" shouldEvalAs "ab42ef"
   }
 
+  behavior of "symbol function"
+  it should "convert strings to symbols" in {
+    """(symbol "abc")""" shouldEvalAs Symbol("abc")
+    """(symbol "abc__")""" shouldEvalAs Symbol("abc__")
+    // """(symbol "!.!")""" shouldEvalAs Symbol("!.!")
+  }
+
+  it should "act as identity with symbols" in {
+    """(symbol 'x)""" shouldEvalAs Symbol("x")
+  }
+
   behavior of "cond macro"
   it should "return nil when no args are passed" in {
     "(cond)" shouldEvalAs Nil

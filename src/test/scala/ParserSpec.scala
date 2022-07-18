@@ -15,6 +15,7 @@ class ParserSpec extends AnyFlatSpec with should.Matchers {
 
   it should "parse string literals" in {
     Parser.run("\"abc\"").get.head should be(String("abc"))
+    Parser.run("\"_!.$\"").get.head should be(String("_!.$"))
   }
 
   it should "parse whitespace and comments" in {

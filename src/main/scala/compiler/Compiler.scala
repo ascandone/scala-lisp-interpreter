@@ -117,6 +117,7 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/is-symbol") :: args => compileOp1(IsSymbol, args)
         case Symbol("builtin/is-number") :: args => compileOp1(IsNumber, args)
         case Symbol("builtin/is-string") :: args => compileOp1(IsString, args)
+        case Symbol("builtin/make-symbol") :: args => compileOp1(MakeSymbol, args)
         case Symbol("builtin/str") :: args => compileOp1(Str, args)
         case Symbol("builtin/sleep") :: args => compileOp1(Sleep, args)
         case Symbol("builtin/panic") :: args => compileOp1(Panic, args)

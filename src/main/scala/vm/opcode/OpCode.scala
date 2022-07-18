@@ -74,4 +74,6 @@ case object Self extends OpCode
 
 case object GenSym extends OpCode
 
+case object MakeSymbol extends OpCode
+
 case object Str extends OpCode

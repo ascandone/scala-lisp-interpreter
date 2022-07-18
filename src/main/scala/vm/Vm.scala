@@ -298,6 +298,12 @@ class Vm {
         val newSym = genSymCount
         genSymCount += 1
         stack.push(Symbol("G__" ++ newSym.toString))
+
+      case MakeSymbol => execOp1({
+        case String(s) => Symbol(s)
+        case Symbol(s) => Symbol(s)
+        case _ => throw RuntimeError("Illegal conversion to symbol")
+      })
     }
 
     @tailrec

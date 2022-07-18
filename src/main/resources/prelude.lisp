@@ -60,8 +60,8 @@
 (defun number? (a)
   (builtin/is-number a))
 
-(defun str (a)
-  (builtin/str a))
+(defun symbol (a)
+  (builtin/make-symbol a))
 
 (defun apply (f args)
   (builtin/apply f args))
