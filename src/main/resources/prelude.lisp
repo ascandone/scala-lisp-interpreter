@@ -181,6 +181,11 @@
         (cons (first form) (cons x (rest form))))
       ,@(rest forms))))
 
+(defun str (&rest exprs)
+  (-> exprs
+    (map (lambda (e) (builtin/str e)))
+    (foldl "" +)))
+
 (defmacro comment (&rest forms)
   nil)
 

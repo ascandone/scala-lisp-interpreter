@@ -612,6 +612,11 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
     "(str '(1 2 3))" shouldEvalAs "(1 2 3)"
   }
 
+  it should "concat multiple values" in {
+    """(str "ab" "cd" "ef")""" shouldEvalAs "abcdef"
+    """(str "ab" 42 "ef")""" shouldEvalAs "ab42ef"
+  }
+
   behavior of "cond macro"
   it should "return nil when no args are passed" in {
     "(cond)" shouldEvalAs Nil
