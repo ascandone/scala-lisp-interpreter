@@ -425,7 +425,7 @@ class IntegrationLibSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "have a map function" in {
-    "(map nil (lambda (x) (+ 100 x)))" shouldEvalAs Nil
+    "(map nil (lambda (_) (panic \"panic\")))" shouldEvalAs Nil
     "(map (list 1 2 3) (lambda (x) (+ 100 x)))" shouldEvalAs List.of(101, 102, 103)
   }
 
