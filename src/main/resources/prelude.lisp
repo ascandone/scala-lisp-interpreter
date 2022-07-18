@@ -246,3 +246,11 @@
   `(if ,b
     ,y
     ,x))
+
+(defmacro when (b &rest exprs)
+  `(if ,b (do ,@exprs)))
+
+(defun foreach (lst f)
+  (when lst
+    (f (first lst))
+    (foreach (rest lst) f)))
