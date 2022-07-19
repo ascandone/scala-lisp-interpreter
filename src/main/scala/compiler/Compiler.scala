@@ -46,7 +46,7 @@ class Compiler(vm: Vm = new Vm) {
 
     def collect(): Array[OpCode] = emitter.collect
 
-    def compile(value: Value[OpCode]): Unit = value match {
+    def compile(value: Value[OpCode], tailPosition: Boolean = false): Unit = value match {
       case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | Function(_, _) | Closure(_, _) =>
         emitter.emit(Push(value))
 
@@ -62,7 +62,7 @@ class Compiler(vm: Vm = new Vm) {
       case List(forms) => forms match {
         case Nil => emitter.emit(Push(value))
 
-        case Symbol(Compiler.DO) :: block => compileBlock(block)
+        case Symbol(Compiler.DO) :: block => compileBlock(block, tailPosition = tailPosition)
 
         case Symbol(Compiler.IF) :: args => args match {
           case cond :: Nil => compileIf(cond)
@@ -96,6 +96,17 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw CompilationError("Invalid `quote` arguments")
         }
 
+        case Symbol("recur") :: args =>
+          if (tailPosition) {
+            // TODO set args, goto 0
+            for (arg <- args) {
+              compile(arg, tailPosition = false)
+            }
+            emitter.emit(Push(Nil))
+          } else {
+            throw CompilationError(s"Not in tail position: ${value.show}")
+          }
+
         case Symbol("builtin/gensym") :: args => compileOp0(GenSym, args)
         case Symbol("builtin/apply") :: args => compileOp2(Apply, args)
         case Symbol("builtin/fork") :: args => compileOp1(Fork, args)
@@ -123,12 +134,12 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/panic") :: args => compileOp1(Panic, args)
         case Symbol("builtin/is-eq") :: args => compileOp2(IsEq, args)
 
-        case f :: args => compileApplication(f, args)
+        case f :: args => compileApplication(f, args, tailPosition = tailPosition)
       }
     }
 
 
-    private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit =
+    private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]], tailPosition: Boolean): Unit =
       lookupMacro(f) match {
         case Some(macroFunction) =>
           val instructions = scala.List[scala.List[OpCode]](
@@ -141,7 +152,7 @@ class Compiler(vm: Vm = new Vm) {
 
           try {
             val result = vm.run(instructions)
-            compile(result)
+            compile(result, tailPosition = tailPosition)
           } catch {
             case e: RuntimeError => throw CompilationError(e.message)
           }
@@ -149,9 +160,9 @@ class Compiler(vm: Vm = new Vm) {
 
         case None =>
           for (arg <- args) {
-            compile(arg)
+            compile(arg, tailPosition = false)
           }
-          compile(f)
+          compile(f, tailPosition = false)
           emitter.emit(Call(args.length))
       }
 
@@ -192,19 +203,20 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileDef(name: java.lang.String, value: Value[OpCode] = Nil): Unit = {
       val symbol = symbolTable.define(name, forceGlobal = true)
-      compile(value)
+      compile(value, tailPosition = false)
       emitter.emit(SetGlobal(symbol.index))
     }
 
-    private def compileBlock(block: scala.List[Value[OpCode]]): Unit = block match {
+    private def compileBlock(block: scala.List[Value[OpCode]], tailPosition: Boolean): Unit = block match {
       case Nil => emitter.emit(Push(Nil))
-      case value :: Nil => compile(value)
+      case value :: Nil => compile(value, tailPosition = tailPosition)
       case _ => for ((value, index) <- block.zipWithIndex) {
         if (index != 0) {
           emitter.emit(Pop)
         }
 
-        compile(value)
+        val isLast = index == block.length - 1 // TODO optimize
+        compile(value, tailPosition = isLast)
       }
     }
 
@@ -213,13 +225,13 @@ class Compiler(vm: Vm = new Vm) {
                            branchTrue: Value[OpCode] = Nil,
                            branchFalse: Value[OpCode] = Nil
                          ): Unit = {
-      compile(cond)
+      compile(cond, tailPosition = false)
       val beginBranchTrue = emitter.placeholder()
-      compile(branchTrue)
+      compile(branchTrue, tailPosition = true)
 
       val beginBranchFalse = emitter.placeholder()
       beginBranchTrue.fill(JumpIfNot)
-      compile(branchFalse)
+      compile(branchFalse, tailPosition = true)
       beginBranchFalse.fill(Jump)
     }
 
@@ -232,7 +244,7 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileOp1(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case x :: Nil =>
-        compile(x)
+        compile(x, tailPosition = false)
         emitter.emit(op)
 
       case _ => throw CompilationError(s"Invalid arity (expected 1, got ${args.length}")
@@ -240,8 +252,8 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileOp2(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case x :: y :: Nil =>
-        compile(x)
-        compile(y)
+        compile(x, tailPosition = false)
+        compile(y, tailPosition = false)
         emitter.emit(op)
       case _ => throw CompilationError(s"Invalid arity (expected 2, got ${args.length})")
     }
@@ -270,7 +282,7 @@ class Compiler(vm: Vm = new Vm) {
         compiler.symbolTable.define(param)
       }
 
-      compiler.compile(body)
+      compiler.compile(body, tailPosition = true)
       compiler.emitter.emit(Return)
       val instructions = compiler.collect()
 
