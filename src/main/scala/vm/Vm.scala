@@ -335,37 +335,19 @@ class Vm {
       }
     }
 
-    @tailrec
-    private def isTailCall(closure: Closure[OpCode], ip: Int): Boolean =
-      closure.fn.instructions(ip) match {
-        case Return => true
-        case Jump(target) => isTailCall(closure, target)
-        case _ => false
-      }
-
     private def callFunction(closure: Closure[OpCode], givenArgs: scala.List[Value[OpCode]]): Unit =
       closure.fn.arity parse givenArgs match {
         // TODO better error
         case Left(ArgumentsArity.RequiredArgsMissing(expected, got)) => throw RuntimeError(s"Arity error (expected at least $expected, got $got)")
         case Left(ArgumentsArity.TooManyArgs(extra)) => throw RuntimeError(s"Arity error (got $extra more)")
         case Right(parsedArgs) =>
+          val basePointer = stack.length()
+          handleCallPush(parsedArgs)
 
-          if (
-            frames.peek().closure.fn == closure.fn && isTailCall(closure, frames.peek().ip)
-          ) {
-            stack.withPointer(frames.peek().basePointer, {
-              handleCallPush(parsedArgs)
-            })
-            frames.peek().ip = 0
-          } else {
-            val basePointer = stack.length()
-            handleCallPush(parsedArgs)
-
-            frames.push(new Frame(
-              closure = closure,
-              basePointer = basePointer
-            ))
-          }
+          frames.push(new Frame(
+            closure = closure,
+            basePointer = basePointer
+          ))
       }
 
     private def handleCallPush(parsedArgs: ParsedArguments[Value[OpCode]]): Unit = {

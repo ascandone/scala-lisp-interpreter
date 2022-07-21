@@ -31,6 +31,7 @@ object Compiler {
 case class Ctx(
                 nameBinding: Option[java.lang.String],
                 isTailRec: Boolean,
+                arity: ArgumentsArity
               )
 
 
@@ -42,6 +43,7 @@ class Compiler(vm: Vm = new Vm) {
     Ctx(
       nameBinding = None,
       isTailRec = false,
+      arity = ArgumentsArity()
     ))
 
   def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
@@ -113,9 +115,8 @@ class Compiler(vm: Vm = new Vm) {
         }
 
         case Symbol("recur") :: args =>
+          // TODO remove
           if (ctxVar.value.isTailRec) {
-            // TODO check arity
-            // TODO check args order
             for ((arg, index) <- args.zipWithIndex.reverse) {
               ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
                 compile(arg)
@@ -180,16 +181,30 @@ class Compiler(vm: Vm = new Vm) {
             case e: RuntimeError => throw CompilationError(e.message)
           }
 
-
         case None =>
-          ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
-            // TODO bad error message (compile f first)
-            for (arg <- args) {
-              compile(arg)
-            }
-            compile(f)
+          (f, ctxVar.value.nameBinding, ctxVar.value.arity.parse(args)) match {
+            case (Symbol(fname), Some(nameBindingValue), Right(value)) if fname == nameBindingValue && ctxVar.value.isTailRec =>
+              for ((arg, index) <- args.zipWithIndex.reverse) {
+                ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+                  compile(arg)
+                }
+                emitter.emit(SetLocal(index))
+              }
+              emitter.emit(Jump(0))
+
+
+            case _ =>
+              ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+                // TODO bad error message (compile f first)
+                for (arg <- args) {
+                  compile(arg)
+                }
+                compile(f)
+              }
+              emitter.emit(Call(args.length))
           }
-          emitter.emit(Call(args.length))
+
+
       }
     }
 
@@ -320,6 +335,8 @@ class Compiler(vm: Vm = new Vm) {
 
       ctxVar.withValue(ctxVar.value.copy(
         isTailRec = true,
+        nameBinding = ctxVar.value.nameBinding.filter(name => !compiledParams.contains(name)),
+        arity = compiledParams.toArity
       )) {
         compiler.compile(body)
       }
