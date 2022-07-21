@@ -164,13 +164,13 @@ class Compiler(vm: Vm = new Vm) {
     private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit =
       lookupMacro(f) match {
         case Some(macroFunction) =>
-          val compiler = new CompilerLoop(topLevelSymbolTable)
+          val emitter = new Emitter()
           for (arg <- args) {
-            compiler.emitter.emit(Push(arg))
+            emitter.emit(Push(arg))
           }
-          compiler.emitter.emit(Push(macroFunction))
-          compiler.emitter.emit(Call(args.length))
-          val instructions = compiler.emitter.collect
+          emitter.emit(Push(macroFunction))
+          emitter.emit(Call(args.length))
+          val instructions = emitter.collect
 
           try {
             val result = vm.run(instructions)
