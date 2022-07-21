@@ -114,19 +114,6 @@ class Compiler(vm: Vm = new Vm) {
           case _ => throw CompilationError("Invalid `quote` arguments")
         }
 
-        case Symbol("recur") :: args =>
-          // TODO remove
-          if (ctxVar.value.isTailRec) {
-            for ((arg, index) <- args.zipWithIndex.reverse) {
-              ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
-                compile(arg)
-              }
-              emitter.emit(SetLocal(index))
-            }
-            emitter.emit(Jump(0))
-          } else {
-            throw CompilationError(s"Not in tail position: ${value.show}")
-          }
 
         case Symbol("builtin/gensym") :: args => compileOp0(GenSym, args)
         case Symbol("builtin/apply") :: args => compileOp2(Apply, args)
