@@ -164,13 +164,13 @@ class Compiler(vm: Vm = new Vm) {
     private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit =
       lookupMacro(f) match {
         case Some(macroFunction) =>
-          val instructions = scala.List[scala.List[OpCode]](
-            args.map(Push),
-            scala.List(
-              Push(macroFunction),
-              Call(args.length),
-            )
-          ).flatten.toArray
+          val compiler = new CompilerLoop(topLevelSymbolTable)
+          for (arg <- args) {
+            compiler.emitter.emit(Push(arg))
+          }
+          compiler.emitter.emit(Push(macroFunction))
+          compiler.emitter.emit(Call(args.length))
+          val instructions = compiler.emitter.collect
 
           try {
             val result = vm.run(instructions)
@@ -345,6 +345,9 @@ private case class CompiledParams(
     optionals = optionals.length,
     rest = rest.isDefined,
   )
+
+  def contains(name: java.lang.String): Boolean =
+    required.contains(name) || optionals.contains(name) || rest.contains(name)
 }
 
 private object CompiledParams {
