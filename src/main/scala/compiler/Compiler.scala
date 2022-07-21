@@ -98,11 +98,13 @@ class Compiler(vm: Vm = new Vm) {
 
         case Symbol("recur") :: args =>
           if (tailPosition) {
-            // TODO set args, goto 0
-            for (arg <- args) {
+            // TODO check arity
+            // TODO check args order
+            for ((arg, index) <- args.zipWithIndex.reverse) {
               compile(arg, tailPosition = false)
+              emitter.emit(SetLocal(index))
             }
-            emitter.emit(Push(Nil))
+            emitter.emit(Jump(0))
           } else {
             throw CompilationError(s"Not in tail position: ${value.show}")
           }
@@ -113,6 +115,8 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/send") :: args => compileOp2(Send, args)
         case Symbol("builtin/receive") :: args => compileOp0(Receive, args)
         case Symbol("builtin/self") :: args => compileOp0(Self, args)
+        case Symbol("builtin/now") :: args => compileOp0(Now, args)
+        case Symbol("builtin/dis") :: args => compileOp1(Dis, args)
         case Symbol("builtin/add") :: args => compileOp2(Add, args)
         case Symbol("builtin/mult") :: args => compileOp2(Mult, args)
         case Symbol("builtin/sub") :: args => compileOp2(Sub, args)

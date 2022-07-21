@@ -32,6 +32,9 @@ object Vm {
 class Vm {
   private val globals = mutable.HashMap[Int, Value[OpCode]]()
   private var genSymCount = 0
+  
+  def getGlobal(ident: Int): Option[Value[OpCode]] =
+    globals.get(ident)
 
   private val queues = {
     val map = mutable.HashMap[Double, LinkedTransferQueue[Value[OpCode]]]()
@@ -281,6 +284,11 @@ class Vm {
         stack.push(retValue)
         frames.pop()
 
+      case SetLocal(ident) =>
+        val value = stack.pop()
+        val index = frames.peek().basePointer + ident
+        stack.set(index, value)
+
       case GetLocal(ident) =>
         val index = frames.peek().basePointer + ident
         val retValue = stack.get(index)
@@ -304,6 +312,27 @@ class Vm {
         case Symbol(s) => Symbol(s)
         case _ => throw RuntimeError("Illegal conversion to symbol")
       })
+
+      case Now => execOp0(() => System.currentTimeMillis())
+
+      case Dis => {
+        def printInstr(instructions: Array[OpCode]): Unit = {
+          val padding = instructions.length.toString.length
+          println(instructions.zipWithIndex.map((x) => s"${x._2.toString.reverse.padTo(padding, '0').reverse} ${x._1}").mkString("\n"))
+        }
+
+        execOp1({
+          case Function(instructions, _) => {
+            printInstr(instructions)
+            Nil
+          }
+          case Closure(_, fn) => {
+            printInstr(fn.instructions)
+            Nil
+          }
+          case _ => throw RuntimeError("Invalid dis arg")
+        })
+      }
     }
 
     @tailrec

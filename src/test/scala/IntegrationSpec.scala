@@ -252,8 +252,21 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
   }
 
   behavior of "tail call optimization"
+  it should "work with recur" in {
+    val LIM = 1111500
+
+    s"""
+    (def f (lambda* (n)
+      (if (builtin/greater-than n $LIM)
+        n
+        (recur (builtin/add 1 n)))))
+
+    (f 0)
+    """ shouldEvalAs (LIM + 1)
+  }
+
   it should "allow simple recursion" in {
-    val LIM = 1500
+    val LIM = 1111500
 
     s"""
     (def f (lambda* (n)
@@ -288,6 +301,19 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
       (if (builtin/greater-than n $LIM)
         acc
         (sum-n (builtin/add 1 n) (builtin/add acc n)))))
+
+    (sum-n 0 0)
+    """ shouldEvalAs (LIM * (LIM + 1) / 2)
+  }
+
+  it should "allow simple recursion with two params (recur)" in {
+    val LIM = 1500
+
+    s"""
+    (def sum-n (lambda* (n acc)
+      (if (builtin/greater-than n $LIM)
+        acc
+        (recur (builtin/add 1 n) (builtin/add acc n)))))
 
     (sum-n 0 0)
     """ shouldEvalAs (LIM * (LIM + 1) / 2)
