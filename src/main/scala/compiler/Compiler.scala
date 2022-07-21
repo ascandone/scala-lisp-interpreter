@@ -161,7 +161,8 @@ class Compiler(vm: Vm = new Vm) {
     }
 
 
-    private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit =
+    private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit = {
+      // TODO values should shadow macros
       lookupMacro(f) match {
         case Some(macroFunction) =>
           val emitter = new Emitter()
@@ -182,6 +183,7 @@ class Compiler(vm: Vm = new Vm) {
 
         case None =>
           ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+            // TODO bad error message (compile f first)
             for (arg <- args) {
               compile(arg)
             }
@@ -189,6 +191,7 @@ class Compiler(vm: Vm = new Vm) {
           }
           emitter.emit(Call(args.length))
       }
+    }
 
     private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode]): Unit = {
       val lambdaSymbolTable = symbolTable.nested
