@@ -317,7 +317,6 @@ class Compiler(vm: Vm = new Vm) {
 
       ctxVar.withValue(ctxVar.value.copy(
         isTailRec = true,
-        params = params,
       )) {
         compiler.compile(body)
       }
