@@ -5,6 +5,7 @@ import vm._
 import vm.opcode._
 
 import scala.collection.mutable
+import scala.util.DynamicVariable
 
 final case class CompilationError(
                                    message: java.lang.String,
@@ -27,9 +28,21 @@ object Compiler {
   val DEF_MACRO = "defmacro"
 }
 
+case class Ctx(
+                nameBinding: Option[java.lang.String],
+                isTailRec: Boolean,
+              )
+
+
 class Compiler(vm: Vm = new Vm) {
   private val topLevelSymbolTable = new SymbolTable()
   private val macros = new mutable.HashMap[java.lang.String, Function[OpCode]]()
+
+  private val ctxVar = new DynamicVariable(
+    Ctx(
+      nameBinding = None,
+      isTailRec = false,
+    ))
 
   def compile(values: scala.List[Value[OpCode]]): Array[OpCode] = {
     val block = List[OpCode](
@@ -46,8 +59,8 @@ class Compiler(vm: Vm = new Vm) {
 
     def collect(): Array[OpCode] = emitter.collect
 
-    def compile(value: Value[OpCode], tailPosition: Boolean = false): Unit = value match {
-      case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | Function(_, _) | Closure(_, _) =>
+    def compile(value: Value[OpCode]): Unit = value match {
+      case Number(_) | String(_) | Symbol(Compiler.TRUE) | Symbol(Compiler.FALSE) | Function(_, _, _) | Closure(_, _) =>
         emitter.emit(Push(value))
 
       case Symbol(name) => symbolTable.resolve(name) match {
@@ -62,21 +75,24 @@ class Compiler(vm: Vm = new Vm) {
       case List(forms) => forms match {
         case Nil => emitter.emit(Push(value))
 
-        case Symbol(Compiler.DO) :: block => compileBlock(block, tailPosition = tailPosition)
+        case Symbol(Compiler.DO) :: block => compileBlock(block)
 
         case Symbol(Compiler.IF) :: args => args match {
-          case cond :: Nil => compileIf(cond)
-          case cond :: a :: Nil => compileIf(cond, a)
+          case cond :: Nil => compileIf(cond, Nil, Nil)
+          case cond :: a :: Nil => compileIf(cond, a, Nil)
           case cond :: a :: b :: Nil => compileIf(cond, a, b)
           case _ => throw CompilationError("Invalid `if` arity")
         }
 
         case Symbol(Compiler.DEF) :: args => args match {
-          case Symbol(name) :: args2 => args2 match {
-            case Nil => compileDef(name)
-            case value :: Nil => compileDef(name, value)
-            case _ => throw CompilationError("Invalid `def` arity")
+          case Symbol(name) :: args2 => ctxVar.withValue(ctxVar.value.copy(nameBinding = Some(name))) {
+            args2 match {
+              case Nil => compileDef(name)
+              case value :: Nil => compileDef(name, value)
+              case _ => throw CompilationError("Invalid `def` arity")
+            }
           }
+
 
           case _ => throw CompilationError("Invalid `def` arguments")
         }
@@ -97,11 +113,13 @@ class Compiler(vm: Vm = new Vm) {
         }
 
         case Symbol("recur") :: args =>
-          if (tailPosition) {
+          if (ctxVar.value.isTailRec) {
             // TODO check arity
             // TODO check args order
             for ((arg, index) <- args.zipWithIndex.reverse) {
-              compile(arg, tailPosition = false)
+              ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+                compile(arg)
+              }
               emitter.emit(SetLocal(index))
             }
             emitter.emit(Jump(0))
@@ -138,12 +156,12 @@ class Compiler(vm: Vm = new Vm) {
         case Symbol("builtin/panic") :: args => compileOp1(Panic, args)
         case Symbol("builtin/is-eq") :: args => compileOp2(IsEq, args)
 
-        case f :: args => compileApplication(f, args, tailPosition = tailPosition)
+        case f :: args => compileApplication(f, args)
       }
     }
 
 
-    private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]], tailPosition: Boolean): Unit =
+    private def compileApplication(f: Value[OpCode], args: scala.List[Value[OpCode]]): Unit =
       lookupMacro(f) match {
         case Some(macroFunction) =>
           val instructions = scala.List[scala.List[OpCode]](
@@ -156,21 +174,23 @@ class Compiler(vm: Vm = new Vm) {
 
           try {
             val result = vm.run(instructions)
-            compile(result, tailPosition = tailPosition)
+            compile(result)
           } catch {
             case e: RuntimeError => throw CompilationError(e.message)
           }
 
 
         case None =>
-          for (arg <- args) {
-            compile(arg, tailPosition = false)
+          ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+            for (arg <- args) {
+              compile(arg)
+            }
+            compile(f)
           }
-          compile(f, tailPosition = false)
           emitter.emit(Call(args.length))
       }
 
-    private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode] = Nil): Unit = {
+    private def compileLambda(params: scala.List[Value[OpCode]], body: Value[OpCode]): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
 
@@ -193,7 +213,7 @@ class Compiler(vm: Vm = new Vm) {
       }
     }
 
-    private def compileMacro(name: java.lang.String, params: scala.List[Value[OpCode]], body: Value[OpCode] = Nil): Unit = {
+    private def compileMacro(name: java.lang.String, params: scala.List[Value[OpCode]], body: Value[OpCode]): Unit = {
       val lambdaSymbolTable = symbolTable.nested
       val fn = CompilerLoop.compileLambda(lambdaSymbolTable, params, body)
       macros.put(name, fn)
@@ -207,20 +227,24 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileDef(name: java.lang.String, value: Value[OpCode] = Nil): Unit = {
       val symbol = symbolTable.define(name, forceGlobal = true)
-      compile(value, tailPosition = false)
+      ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+        compile(value)
+      }
       emitter.emit(SetGlobal(symbol.index))
     }
 
-    private def compileBlock(block: scala.List[Value[OpCode]], tailPosition: Boolean): Unit = block match {
+    private def compileBlock(block: scala.List[Value[OpCode]]): Unit = block match {
       case Nil => emitter.emit(Push(Nil))
-      case value :: Nil => compile(value, tailPosition = tailPosition)
+      case value :: Nil => compile(value)
       case _ => for ((value, index) <- block.zipWithIndex) {
         if (index != 0) {
           emitter.emit(Pop)
         }
 
         val isLast = index == block.length - 1 // TODO optimize
-        compile(value, tailPosition = isLast)
+        ctxVar.withValue(ctxVar.value.copy(isTailRec = isLast)) {
+          compile(value)
+        }
       }
     }
 
@@ -229,13 +253,15 @@ class Compiler(vm: Vm = new Vm) {
                            branchTrue: Value[OpCode] = Nil,
                            branchFalse: Value[OpCode] = Nil
                          ): Unit = {
-      compile(cond, tailPosition = false)
+      ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+        compile(cond)
+      }
       val beginBranchTrue = emitter.placeholder()
-      compile(branchTrue, tailPosition = true)
+      compile(branchTrue)
 
       val beginBranchFalse = emitter.placeholder()
       beginBranchTrue.fill(JumpIfNot)
-      compile(branchFalse, tailPosition = true)
+      compile(branchFalse)
       beginBranchFalse.fill(Jump)
     }
 
@@ -248,7 +274,9 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileOp1(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case x :: Nil =>
-        compile(x, tailPosition = false)
+        ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+          compile(x)
+        }
         emitter.emit(op)
 
       case _ => throw CompilationError(s"Invalid arity (expected 1, got ${args.length}")
@@ -256,19 +284,20 @@ class Compiler(vm: Vm = new Vm) {
 
     private def compileOp2(op: OpCode, args: scala.List[Value[OpCode]]): Unit = args match {
       case x :: y :: Nil =>
-        compile(x, tailPosition = false)
-        compile(y, tailPosition = false)
+        ctxVar.withValue(ctxVar.value.copy(isTailRec = false)) {
+          compile(x)
+          compile(y)
+        }
         emitter.emit(op)
       case _ => throw CompilationError(s"Invalid arity (expected 2, got ${args.length})")
     }
-
   }
 
   private object CompilerLoop {
     private def compileLambda(
                                symbolTable: SymbolTable,
                                params: scala.List[Value[OpCode]],
-                               body: Value[OpCode] = Nil
+                               body: Value[OpCode] = Nil,
                              ): Function[OpCode] = {
       val compiler = new CompilerLoop(symbolTable)
 
@@ -286,13 +315,20 @@ class Compiler(vm: Vm = new Vm) {
         compiler.symbolTable.define(param)
       }
 
-      compiler.compile(body, tailPosition = true)
+      ctxVar.withValue(ctxVar.value.copy(
+        isTailRec = true,
+        params = params,
+      )) {
+        compiler.compile(body)
+      }
+
       compiler.emitter.emit(Return)
       val instructions = compiler.collect()
 
       Function(
         instructions = instructions,
         arity = compiledParams.toArity,
+        name = ctxVar.value.nameBinding
       )
     }
   }

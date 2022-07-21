@@ -36,7 +36,14 @@ sealed trait Value[+Op] {
       }
     case List(scala.Nil) => "nil"
     case List(values) => "(" + values.map(_.show).mkString(" ") + ")"
-    case Function(_, _) => "#<Function>"
+    case Function(_, _, name) => {
+      val displayName = name match {
+        case None => "anonymous"
+        case Some(n) => n
+      }
+
+      s"#<Function $displayName>"
+    }
     case Closure(_, _) => "#<Closure>"
   }
 }
@@ -56,6 +63,7 @@ object List {
 case class Function[Op](
                          instructions: Array[Op],
                          arity: ArgumentsArity = ArgumentsArity(),
+                         name: Option[java.lang.String] = None
                        ) extends Value[Op] {
 
   override def toString: java.lang.String = {

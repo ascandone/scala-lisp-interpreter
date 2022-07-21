@@ -18,7 +18,7 @@ final case class RuntimeError(
 
 object Vm {
   private def valueToClosure(value: Value[OpCode]): Closure[OpCode] = value match {
-    case fn@Function(_, _) => Closure(
+    case fn@Function(_, _, _) => Closure(
       freeVariables = Array(),
       fn = fn,
     )
@@ -32,7 +32,7 @@ object Vm {
 class Vm {
   private val globals = mutable.HashMap[Int, Value[OpCode]]()
   private var genSymCount = 0
-  
+
   def getGlobal(ident: Int): Option[Value[OpCode]] =
     globals.get(ident)
 
@@ -322,7 +322,7 @@ class Vm {
         }
 
         execOp1({
-          case Function(instructions, _) => {
+          case Function(instructions, _, _) => {
             printInstr(instructions)
             Nil
           }
