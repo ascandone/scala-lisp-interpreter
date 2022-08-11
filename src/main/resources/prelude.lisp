@@ -254,3 +254,10 @@
   (when lst
     (f (first lst))
     (foreach (rest lst) f)))
+
+(defmacro time (&rest exprs)
+  `(let ((start (builtin/now))
+         (result (do ,@exprs)))
+    (do
+      (log (- (builtin/now) start))
+      result)))

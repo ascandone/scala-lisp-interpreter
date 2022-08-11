@@ -18,6 +18,8 @@ case class GetGlobal(name: Int) extends OpCode
 
 case class GetLocal(ident: Int) extends OpCode
 
+case class SetLocal(ident: Int) extends OpCode
+
 case class Call(passedArgs: Int) extends OpCode
 
 case object Apply extends OpCode
@@ -72,8 +74,12 @@ case object Send extends OpCode
 
 case object Self extends OpCode
 
+case object Now extends OpCode
+
 case object GenSym extends OpCode
 
 case object MakeSymbol extends OpCode
 
 case object Str extends OpCode
+
+case object Dis extends OpCode

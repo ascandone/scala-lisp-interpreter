@@ -18,7 +18,7 @@ final case class RuntimeError(
 
 object Vm {
   private def valueToClosure(value: Value[OpCode]): Closure[OpCode] = value match {
-    case fn@Function(_, _) => Closure(
+    case fn@Function(_, _, _) => Closure(
       freeVariables = Array(),
       fn = fn,
     )
@@ -32,6 +32,9 @@ object Vm {
 class Vm {
   private val globals = mutable.HashMap[Int, Value[OpCode]]()
   private var genSymCount = 0
+
+  def getGlobal(ident: Int): Option[Value[OpCode]] =
+    globals.get(ident)
 
   private val queues = {
     val map = mutable.HashMap[Double, LinkedTransferQueue[Value[OpCode]]]()
@@ -281,6 +284,11 @@ class Vm {
         stack.push(retValue)
         frames.pop()
 
+      case SetLocal(ident) =>
+        val value = stack.pop()
+        val index = frames.peek().basePointer + ident
+        stack.set(index, value)
+
       case GetLocal(ident) =>
         val index = frames.peek().basePointer + ident
         val retValue = stack.get(index)
@@ -304,15 +312,28 @@ class Vm {
         case Symbol(s) => Symbol(s)
         case _ => throw RuntimeError("Illegal conversion to symbol")
       })
-    }
 
-    @tailrec
-    private def isTailCall(closure: Closure[OpCode], ip: Int): Boolean =
-      closure.fn.instructions(ip) match {
-        case Return => true
-        case Jump(target) => isTailCall(closure, target)
-        case _ => false
+      case Now => execOp0(() => System.currentTimeMillis())
+
+      case Dis => {
+        def printInstr(instructions: Array[OpCode]): Unit = {
+          val padding = instructions.length.toString.length
+          println(instructions.zipWithIndex.map((x) => s"${x._2.toString.reverse.padTo(padding, '0').reverse} ${x._1}").mkString("\n"))
+        }
+
+        execOp1({
+          case Function(instructions, _, _) => {
+            printInstr(instructions)
+            Nil
+          }
+          case Closure(_, fn) => {
+            printInstr(fn.instructions)
+            Nil
+          }
+          case _ => throw RuntimeError("Invalid dis arg")
+        })
       }
+    }
 
     private def callFunction(closure: Closure[OpCode], givenArgs: scala.List[Value[OpCode]]): Unit =
       closure.fn.arity parse givenArgs match {
@@ -320,23 +341,13 @@ class Vm {
         case Left(ArgumentsArity.RequiredArgsMissing(expected, got)) => throw RuntimeError(s"Arity error (expected at least $expected, got $got)")
         case Left(ArgumentsArity.TooManyArgs(extra)) => throw RuntimeError(s"Arity error (got $extra more)")
         case Right(parsedArgs) =>
+          val basePointer = stack.length()
+          handleCallPush(parsedArgs)
 
-          if (
-            frames.peek().closure.fn == closure.fn && isTailCall(closure, frames.peek().ip)
-          ) {
-            stack.withPointer(frames.peek().basePointer, {
-              handleCallPush(parsedArgs)
-            })
-            frames.peek().ip = 0
-          } else {
-            val basePointer = stack.length()
-            handleCallPush(parsedArgs)
-
-            frames.push(new Frame(
-              closure = closure,
-              basePointer = basePointer
-            ))
-          }
+          frames.push(new Frame(
+            closure = closure,
+            basePointer = basePointer
+          ))
       }
 
     private def handleCallPush(parsedArgs: ParsedArguments[Value[OpCode]]): Unit = {
