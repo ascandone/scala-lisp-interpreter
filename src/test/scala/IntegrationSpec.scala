@@ -253,7 +253,7 @@ class IntegrationSpec extends AnyFlatSpec with should.Matchers {
 
   behavior of "tail call optimization"
   it should "allow simple recursion" in {
-    val LIM = 1111500
+    val LIM = 2000
 
     s"""
     (def f (lambda* (n)
